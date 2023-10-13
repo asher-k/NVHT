@@ -2,6 +2,7 @@ library(rvest)
 library(purrr)
 
 # Define links and toponym categories
+out_path <- "../toponym_data/"
 ht <- "https://www.hethport.uni-wuerzburg.de/HiTop/hetgeo"
 categories <- c("lemma.php?g=b", "lemma.php?g=g", "lemma.php?g=l", "lemma.php?g=o")
 cat_string <- c("oronym", "hydronym", "choronym", "oikonym")
@@ -45,6 +46,6 @@ for(c in 2:3){
     
     # Sleep to help server then export existing data
     Sys.sleep(3.0)
-    write.csv(entries, paste("../toponym_data/", cat_string[c], ".csv" ,sep=""), row.names=FALSE) 
+    write.csv(entries, paste(out_path, cat_string[c], ".csv" ,sep=""), row.names=FALSE) 
   }
 }
