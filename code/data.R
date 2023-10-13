@@ -16,10 +16,9 @@ oronyms$Toponym <- paste(oronyms$Toponym, "oro", sep=":")
 hydronyms$Toponym <- paste(hydronyms$Toponym, "hyd", sep=":")
 choronyms$Toponym <- paste(choronyms$Toponym, "cho", sep=":")
 
-# Define full dataset and empty DF with relations between entries
+# Define full dataset and empty DF for relations between entries
 toponyms <- rbind(oronyms, hydronyms, choronyms)
 relations <- data.frame(matrix(ncol = 3, nrow = 0))
-colnames(relations) <- c("To", "From", "Document")
 
 # Construct unique relations between entries
 for(doc in unique(toponyms$Textstelle)){
@@ -31,6 +30,14 @@ for(doc in unique(toponyms$Textstelle)){
   combos <- data.frame(combos[1,], combos[2,], doc)
   relations <- rbind(relations, combos)
 }
+colnames(relations) <- c("To", "From", "Document")
 
-# Compute counts for repeat relations
-counts <- group_by(relations, To, From)  # Finish, doesn't work yet
+# Compute counts of Toponyms
+entry_counts <- table(toponyms$Toponym)
+entry_counts <- as.data.frame(entry_counts)
+colnames(entry_counts) <- c("Toponym", "Freq")
+
+# Compute counts of relations
+relation_counts <- relations
+relation_counts <- group_by(relation_counts, To, From) %>% 
+  summarise(total_count=n(),.groups = 'drop') %>% as.data.frame()
