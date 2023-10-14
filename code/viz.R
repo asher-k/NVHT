@@ -1,29 +1,50 @@
 library(igraph)
 library(networkD3)
 library(scales)
+library(stringi)
 
-# Light reformatting of the relationship data
+# First reformat toponym counts
 ecs <- entry_counts 
-ecs$Freq <- rescale(ecs$Freq, t=c(3,30))
 ecs$Type <- gsub(".+:", "", ecs$Toponym)
-ecs$Toponym <- gsub(":[a-zA-Z]*", "", ecs$Toponym)
+ecs$Toponym <- stri_unescape_unicode(gsub("<U\\+(....)>", "\\\\u\\1", ecs$Toponym))
 
-# Start the network
-p <- forceNetwork(relation_counts,
-                  Nodes=ecs,
-                  NodeID="Toponym",
-                  Nodesize="Freq", 
-                  height="1000px", 
-                  width="1000px",        
-                  Source="From",                 # column number of source
-                  Target="To",                 # column number of target
-                  Group="Type",
-                  linkDistance = 100,          # distance between node. Increase this value to have more space between nodes
-                  charge = -900,                # numeric value indicating either the strength of the node repulsion (negative value) or attraction (positive value)
-                  fontSize = 14,               # size of the node names
-                  fontFamily = "serif",       # font og node names
-                  linkColour = "#666",        # colour of edges, MUST be a common colour for the whole graph
-                  opacity = 0.9,              # opacity of nodes. 0=transparent. 1=no transparency
-                  zoom = T                    # Can you zoom on the figure?
+# Function for assigning relationships' toponym ids instead of strings
+update_func <- function(x){
+  k <- which(ecs$Toponym == x)
+  return(k-1)
+}
+
+# Then reformat relationships to indices of the entries
+rcs <- relation_counts
+rcs$To <- stri_unescape_unicode(gsub("<U\\+(....)>", "\\\\u\\1", rcs$To))
+rcs$From <- stri_unescape_unicode(gsub("<U\\+(....)>", "\\\\u\\1", rcs$From))
+rcs$To <- as.array(lapply(rcs$To, update_func))
+rcs$From <- as.array(lapply(rcs$From, update_func))
+
+# Rescale frequency counts for entries/relationships to scale better with the figure
+ecs$Toponym <- gsub(":[a-zA-Z]*", "", ecs$Toponym)  # remove :cat from Toponyms
+# rcs$total_count <- rescale(rcs$total_count, t=c(1,5))
+# ecs$Freq <- rescale(ecs$Freq, t=c(1,5))
+
+# Define the network graph
+ColourScale <- 'd3.scaleOrdinal().domain(["cho", "hyd", "oro"]).range(["#cc189f", "#2566e8", "#db8851"]);'
+
+n <- forceNetwork(Links=rcs, Source="From", Target="To", Value="total_count", 
+             Nodes=ecs, NodeID="Toponym", Group="Type", Nodesize="Freq",
+             colourScale = ColourScale, linkDistance = 200, charge = -30, zoom=T,
+             fontSize = 20, fontFamily = "serif", linkColour = "#666", opacity=0.9, opacityNoHover = TRUE, legend=T,
 )
-p  # Doesn't display, hmmm.
+
+# Widget to make interaction with graph smoother
+n <- htmlwidgets::onRender(n, jsCode =
+  'function(el, x) {
+    d3.selectAll(".node text").style("font-weight", "bold");
+    d3.selectAll(".node text").style("fill", "black")
+    d3.selectAll(".link").style("opacity", "0.2");
+    
+    d3.selectAll(".legend text").text("Choronym");
+  }'
+)
+
+# Finally, display the visualization
+n
