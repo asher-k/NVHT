@@ -13,6 +13,9 @@ hydronyms$Type <- "Hydronym"
 choronyms$Type <- "Choronym"
 oikonyms$Type <- "Oikonym"
 
+# Remove Oikonyms which already exist as a Choronym
+oikonyms <- subset(oikonyms, !(Toponym %in% choronyms$Toponym))
+
 # Append type of entry to Toponym to distinguish between identically named places
 oronyms$Toponym <- paste(oronyms$Toponym, "oro", sep=":")
 hydronyms$Toponym <- paste(hydronyms$Toponym, "hyd", sep=":")
@@ -20,7 +23,7 @@ choronyms$Toponym <- paste(choronyms$Toponym, "cho", sep=":")
 oikonyms$Toponym <- paste(oikonyms$Toponym, "oik", sep=":")
 
 # Define full dataset and empty DF for relations between entries
-toponyms <- rbind(oronyms, hydronyms, choronyms)
+toponyms <- rbind(oronyms, hydronyms, choronyms, oikonyms)
 relations <- data.frame(matrix(ncol = 3, nrow = 0))
 
 # Construct unique relations between entries
@@ -43,4 +46,4 @@ colnames(entry_counts) <- c("Toponym", "Freq")
 # Compute counts of relations
 relation_counts <- relations
 relation_counts <- group_by(relation_counts, To, From) %>% 
-  summarise(total_count=n(),.groups = 'drop') %>% as.data.frame()  # TODO: something broken here...
+  summarise(total_count=n(),.groups = 'drop') %>% as.data.frame()  

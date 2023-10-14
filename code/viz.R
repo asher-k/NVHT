@@ -7,7 +7,7 @@ library(plyr)
 # First reformat Toponym counts
 ecs <- entry_counts 
 ecs$Type <- gsub(".+:", "", ecs$Toponym)
-ecs$Type <- mapvalues(ecs$Type, c("cho", "hyd", "oro"), c("Choronym", "Hydronym", "Oronym"))
+ecs$Type <- mapvalues(ecs$Type, c("cho", "hyd", "oro", "oik"), c("Choronym", "Hydronym", "Oronym", "Oikonym"))
 ecs$Toponym <- stri_unescape_unicode(gsub("<U\\+(....)>", "\\\\u\\1", ecs$Toponym))
 
 # Function for assigning relationships' Toponym ids instead of strings
@@ -29,40 +29,47 @@ ecs$Toponym <- gsub(":[a-zA-Z]*", "", ecs$Toponym)  # remove :cat from Toponyms
 # ecs$Freq <- rescale(ecs$Freq, t=c(1,5))
 
 # Define the network graph
-ColourScale <- 'd3.scaleOrdinal().domain(["Choronym", "Hydronym", "Oronym"]).range(["#cc189f", "#2566e8", "#db8851"]);'
+ColourScale <- 'd3.scaleOrdinal().domain(["Choronym", "Hydronym", "Oronym", "Oikonym"]).range(["#f2428f", "#41a7e2", "#9e7955", "#bcb6d9"]);'
 
 n <- forceNetwork(Links=rcs, Source="From", Target="To", Value="total_count", 
              Nodes=ecs, NodeID="Toponym", Group="Type", Nodesize="Freq",
-             colourScale = ColourScale, linkDistance = 80, charge = -20, zoom=T,
-             fontSize = 20, fontFamily = "serif", linkColour = "#666", opacity=0.9, opacityNoHover = TRUE, legend=T
+             colourScale = ColourScale, linkDistance = 200, charge = -100, zoom=T,
+             fontSize = 20, fontFamily = "serif", linkColour = "#666", opacity=1.0, opacityNoHover = TRUE, legend=T
 )
 
 # Widget to make interaction with graph smoother. Shoutout to all the JS gurus on StackOverflow & other blogging sites
 n <- htmlwidgets::onRender(n, jsCode =
   'function(el, x) {
+    link_opacity_default = "0.075";
+    link_opacity_select = "0.9";
+  
     // Additional default settings
-    d3.selectAll(".node text").style("font-weight", "bold");
     d3.selectAll(".node text").style("stroke", "black");
     d3.selectAll(".node text").attr("stroke-width", "0");
-    d3.selectAll(".link").style("opacity", "0.2");
-    
+    d3.selectAll(".node").select("circle").style("opacity", "0.475");
+    d3.selectAll(".node").select("text").style("opacity", "0.8");
+    d3.selectAll(".link").style("opacity", link_opacity_default);
+
     // Moving onto/off Nodes 
     d3.selectAll(".node").on("mouseenter", function(e, d){
       d3.selectAll(".node text").style("font-size", "20");
       d3.selectAll(".node text").style("stroke-width", "0");
       d3.select(this).select("text").style("font-size", "36");
       d3.select(this).select("text").style("stroke-width", "2");
-      
-      // Update tooltip
+      d3.select(this).select("text").style("opacity", "1.0");      
+      d3.select(this).select("circle").style("opacity", "0.75");
+      // Show tooltip & update text
       d3.select("#tooltip").style("left", d3.event.pageX - 60 + "px").style("top", d3.event.pageY + 20 + "px");
       d3.select("#tooltip").style("opacity", 1).text(d);
     });
     d3.selectAll(".node").on("mouseleave", function(e, d){
       d3.selectAll(".node text").style("stroke-width", "0");
       d3.selectAll(".node text").style("font-size", "20");
-      d3.selectAll(".link").style("opacity", "0.2");
+      d3.selectAll(".node").select("circle").style("opacity", "0.475");
+      d3.selectAll(".node").select("text").style("opacity", "0.8");
+      d3.selectAll(".link").style("opacity", link_opacity_default);
       
-      // Update tooltip
+      // Hide tooltip
       d3.select("#tooltip").style("opacity", 0);
     });
     d3.selectAll(".node").on("mousemove", function() {
@@ -71,14 +78,14 @@ n <- htmlwidgets::onRender(n, jsCode =
     
     // Moving onto/off Linkages 
     d3.selectAll(".link").on("mouseenter", function(e, d){
-      d3.select(this).style("opacity", "0.9");
+      d3.select(this).style("opacity", link_opacity_select);
       
       // Update tooltip
       d3.select("#tooltip").style("left", d3.event.pageX - 60 + "px").style("top", d3.event.pageY + 20 + "px");
       d3.select("#tooltip").style("opacity", 1).text(d);
     });
     d3.selectAll(".link").on("mouseleave", function(e, d){
-      d3.select(this).style("opacity", "0.2");
+      d3.select(this).style("opacity", link_opacity_default);
       
       // Update tooltip
       d3.select("#tooltip").style("opacity", 0);
