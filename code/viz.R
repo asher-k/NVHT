@@ -37,7 +37,7 @@ n <- forceNetwork(Links=rcs, Source="From", Target="To", Value="total_count",
              fontSize = 20, fontFamily = "serif", linkColour = "#666", opacity=0.9, opacityNoHover = TRUE, legend=T
 )
 
-# Widget to make interaction with graph smoother
+# Widget to make interaction with graph smoother. Shoutout to all the JS gurus on StackOverflow & other blogging sites
 n <- htmlwidgets::onRender(n, jsCode =
   'function(el, x) {
     // Additional default settings

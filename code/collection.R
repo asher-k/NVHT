@@ -9,7 +9,7 @@ cat_string <- c("oronym", "hydronym", "choronym", "oikonym")
 assertthat::are_equal(length(categories), length(cat_string))
 
 # Begin reading the toponyms (for all categories, replace below with 1:4)
-for(c in 2:3){
+for(c in 4:4){
   # Read category page and format the list of entries 
   page <- read_html(paste(ht, categories[c], sep = ""))
   tpl <- page %>% html_nodes("ol") %>%  map(~html_nodes(.x, 'li') %>% html_nodes("a") %>% html_attr("href"))
@@ -45,7 +45,7 @@ for(c in 2:3){
     }
     
     # Sleep to help server then export existing data
-    Sys.sleep(3.0)
+    Sys.sleep(2.5)
     write.csv(entries, paste(out_path, cat_string[c], ".csv" ,sep=""), row.names=FALSE) 
   }
 }
