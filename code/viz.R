@@ -37,11 +37,20 @@ n <- forceNetwork(Links=rcs, Source="From", Target="To", Value="total_count",
              fontSize = 20, fontFamily = "serif", linkColour = "#666", opacity=1.0, opacityNoHover = TRUE, legend=T
 )
 
-# Widget to make interaction with graph smoother. Shoutout to all the JS gurus on StackOverflow & other blogging sites
+# Widget to make interaction with graph smoother. Shoutout to all the JS gurus on StackOverflow & other blogging sites, y'all are doing god's work.
 n <- htmlwidgets::onRender(n, jsCode =
   'function(el, x) {
+    // display constants
     link_opacity_default = "0.075";
     link_opacity_select = "0.9";
+    node_tooltip_html = ["<center><p margin-bottom:1px;><span style=\'font-size: 24px;\'>", 
+                         "</span><br><span style=\'font-size: 12px;\'>", 
+                         "</span><hr><span style=\'font-size: 14px;\'> In ", 
+                         " documents</span><hr>Links to</p></center>"]
+    link_tooltip_html = ["<center><p margin-bottom:1px;><span style=\'font-size: 18px;\'>", 
+                         "&#8594;", 
+                         "</span><br>", 
+                         " documents</p></center>"]
   
     // Additional default settings
     d3.selectAll(".node text").style("stroke", "black");
@@ -49,8 +58,18 @@ n <- htmlwidgets::onRender(n, jsCode =
     d3.selectAll(".node").select("circle").style("opacity", "0.475");
     d3.selectAll(".node").select("text").style("opacity", "0.8");
     d3.selectAll(".link").style("opacity", link_opacity_default);
-
-    // Moving onto/off Nodes 
+    
+    // Setup Hover Tooltip
+    d3.select("body").append("div").attr("id", "tooltip")
+                                   .style("position", "absolute")
+                                   .style("opacity", "0")
+                                   .style("background-color", "white")
+                                   .style("border", "solid")
+                                   .style("border-width", "1px")
+                                   .style("border-radius", "5px")
+                                   .style("padding", "5px")
+                                   .style("margin", "0px");
+    // Moving ONTO Node 
     d3.selectAll(".node").on("mouseenter", function(e, d){
       d3.selectAll(".node text").style("font-size", "20");
       d3.selectAll(".node text").style("stroke-width", "0");
@@ -58,10 +77,14 @@ n <- htmlwidgets::onRender(n, jsCode =
       d3.select(this).select("text").style("stroke-width", "2");
       d3.select(this).select("text").style("opacity", "1.0");      
       d3.select(this).select("circle").style("opacity", "0.75");
+      
       // Show tooltip & update text
       d3.select("#tooltip").style("left", d3.event.pageX - 60 + "px").style("top", d3.event.pageY + 20 + "px");
-      d3.select("#tooltip").style("opacity", 1).text(d);
+      d3.select("#tooltip").style("opacity", 1); 
+      d3.select("#tooltip").html(node_tooltip_html[0] + x.nodes.name[d] + node_tooltip_html[1] + x.nodes.group[d]  + node_tooltip_html[2] + x.nodes.nodesize[d] + node_tooltip_html[3]);
     });
+    
+    // Moving OFF Node 
     d3.selectAll(".node").on("mouseleave", function(e, d){
       d3.selectAll(".node text").style("stroke-width", "0");
       d3.selectAll(".node text").style("font-size", "20");
@@ -72,30 +95,34 @@ n <- htmlwidgets::onRender(n, jsCode =
       // Hide tooltip
       d3.select("#tooltip").style("opacity", 0);
     });
+    
+    // Moving AROUND Node 
     d3.selectAll(".node").on("mousemove", function() {
       d3.select("#tooltip").style("left", d3.event.pageX - 60 + "px").style("top", d3.event.pageY + 20 + "px");
     })
     
-    // Moving onto/off Linkages 
+    // Moving ONTO Link 
     d3.selectAll(".link").on("mouseenter", function(e, d){
       d3.select(this).style("opacity", link_opacity_select);
       
-      // Update tooltip
+      // Show tooltip & update text
       d3.select("#tooltip").style("left", d3.event.pageX - 60 + "px").style("top", d3.event.pageY + 20 + "px");
-      d3.select("#tooltip").style("opacity", 1).text(d);
+      d3.select("#tooltip").style("opacity", 1); //.text(x.nodes.name[x.links.source[d]] + "->" + x.nodes.name[x.links.target[d]] + " " + x.links.value[d]);
+      d3.select("#tooltip").html(link_tooltip_html[0] + x.nodes.name[x.links.source[d]] + link_tooltip_html[1] + x.nodes.name[x.links.target[d]]  + link_tooltip_html[2] + x.links.value[d] + link_tooltip_html[3]);
     });
+    
+    // Moving OFF Link 
     d3.selectAll(".link").on("mouseleave", function(e, d){
       d3.select(this).style("opacity", link_opacity_default);
       
-      // Update tooltip
+      // Hide tooltip
       d3.select("#tooltip").style("opacity", 0);
     });
+    
+    // Moving AROUND Link 
     d3.selectAll(".link").on("mousemove", function() {
       d3.select("#tooltip").style("left", d3.event.pageX - 60 + "px").style("top", d3.event.pageY + 20 + "px");
     })
-    
-    // Setup Hover Tooltip
-    d3.select("body").append("div").attr("id", "tooltip").attr("style", "position: absolute; opacity: 0;");
   }'
 )
 
