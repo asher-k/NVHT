@@ -111,7 +111,7 @@ n <- htmlwidgets::onRender(n, jsCode =
       else{
         for(let i = 0; i < Math.min(nodes.length, max_table_entries); i++){
            next_node = sorted[i];
-           tooltip_info += node_tooltip_html[4] + node_tooltip_html[5] + x.nodes.name[next_node[0]] + node_tooltip_html[6] + node_tooltip_html[5] + next_node[1] + node_tooltip_html[6] + node_tooltip_html[7]; // x.nodes.name[nodes[node_index]] nodes_s[node_index]
+           tooltip_info += node_tooltip_html[4] + node_tooltip_html[5] + x.nodes.name[next_node[0]] + "&nbsp;&nbsp;&nbsp;&nbsp;" + node_tooltip_html[6] + node_tooltip_html[5] + next_node[1] + node_tooltip_html[6] + node_tooltip_html[7]; // x.nodes.name[nodes[node_index]] nodes_s[node_index]
         }
         if(nodes.length > 5){
           r_conns = nodes.length-5
@@ -132,6 +132,7 @@ n <- htmlwidgets::onRender(n, jsCode =
       
       // Hide tooltip
       d3.select("#tooltip").style("opacity", 0);
+      d3.select("#tooltip").html("");
     });
     
     // Moving AROUND Node 
@@ -155,6 +156,7 @@ n <- htmlwidgets::onRender(n, jsCode =
       
       // Hide tooltip
       d3.select("#tooltip").style("opacity", 0);
+      d3.select("#tooltip").html("");
     });
     
     // Moving AROUND Link 
@@ -163,3 +165,6 @@ n <- htmlwidgets::onRender(n, jsCode =
     })
   }'
 )
+
+# # And Display! (local only)
+# n
