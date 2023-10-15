@@ -41,14 +41,17 @@ n <- forceNetwork(Links=rcs, Source="From", Target="To", Value="total_count",
 n <- htmlwidgets::onRender(n, jsCode =
   'function(el, x) {
     // display constants
+    max_table_entries = 5;
     link_opacity_default = "0.075";
     link_opacity_select = "0.9";
-    node_tooltip_html = ["<center><p margin-bottom:1px;><span style=\'font-size: 24px;\'>", 
-                         "</span><br><span style=\'font-size: 12px;\'>", 
+    node_tooltip_html = ["<center><p margin-bottom:0px;><span style=\'font-size: 24px;\'>", 
+                         "</span> <span style=\'font-size: 12px;\'>", 
                          "</span><hr><span style=\'font-size: 14px;\'> In ", 
-                         " documents</span><hr>Links to</p></center>"]
+                         " documents</span><br><span style=\'font-size: 14px;\'>Mentioned with</span><table>",
+                         "<tr>", "<td>", "</td>", "</tr>",
+                         "</table></p></center>"]
     link_tooltip_html = ["<center><p margin-bottom:1px;><span style=\'font-size: 18px;\'>", 
-                         "&#8594;", 
+                         " &#8596; ", 
                          "</span><br>", 
                          " documents</p></center>"]
   
@@ -78,10 +81,45 @@ n <- htmlwidgets::onRender(n, jsCode =
       d3.select(this).select("text").style("opacity", "1.0");      
       d3.select(this).select("circle").style("opacity", "0.75");
       
-      // Show tooltip & update text
-      d3.select("#tooltip").style("left", d3.event.pageX - 60 + "px").style("top", d3.event.pageY + 20 + "px");
+      // Show tooltip & update HTML with relevant data about the Toponym
+      d3.select("#tooltip").style("left", d3.event.pageX + 20 + "px").style("top", d3.event.pageY + 20 + "px");
       d3.select("#tooltip").style("opacity", 1); 
-      d3.select("#tooltip").html(node_tooltip_html[0] + x.nodes.name[d] + node_tooltip_html[1] + x.nodes.group[d]  + node_tooltip_html[2] + x.nodes.nodesize[d] + node_tooltip_html[3]);
+      tooltip_info = node_tooltip_html[0] + x.nodes.name[d] + node_tooltip_html[1] + x.nodes.group[d]  + node_tooltip_html[2] + x.nodes.nodesize[d] + node_tooltip_html[3];
+      
+      // Get all links with other nodes for this node and their corresponding strengths
+      var sources = x.links.source.map((p, q) => p === d ? q : "").filter(String);
+      var sources_n = sources.map((p) => x.links.target[p]);
+      var sources_s = sources.map((p) => x.links.value[p]);
+
+      var targets = x.links.target.map((p, q) => p === d ? q : "").filter(String);
+      var targets_n = targets.map((p) => x.links.source[p]);
+      var targets_s = targets.map((p) => x.links.value[p]);
+      
+      nodes = sources_n.concat(targets_n);
+      nodes_s = sources_s.concat(targets_s);
+      var node_dict = {};
+      for (let k = 0; k <nodes.length; k++){
+        node_dict[nodes[k]] = nodes_s[k];
+      }
+      node_order = Object.values(node_dict).sort(function(a, b) {return a > b ? 1 : -1;});
+      sorted = Object.entries(node_dict);
+      sorted.sort((a, b) => node_order.indexOf(a[1]) - node_order.indexOf(b[1])).reverse();
+
+      if(nodes.length < 1){
+         tooltip_info += node_tooltip_html[4] + node_tooltip_html[5] + "<em>Isolate</em>" + node_tooltip_html[6] + node_tooltip_html[7];
+      }
+      else{
+        for(let i = 0; i < Math.min(nodes.length, max_table_entries); i++){
+           next_node = sorted[i];
+           tooltip_info += node_tooltip_html[4] + node_tooltip_html[5] + x.nodes.name[next_node[0]] + node_tooltip_html[6] + node_tooltip_html[5] + next_node[1] + node_tooltip_html[6] + node_tooltip_html[7]; // x.nodes.name[nodes[node_index]] nodes_s[node_index]
+        }
+        if(nodes.length > 5){
+          r_conns = nodes.length-5
+          tooltip_info += node_tooltip_html[4] + node_tooltip_html[5] + "and " + r_conns + " others..." + node_tooltip_html[6] + node_tooltip_html[7];
+        }
+      }
+      tooltip_info = tooltip_info + node_tooltip_html[8];
+      d3.select("#tooltip").html(tooltip_info);
     });
     
     // Moving OFF Node 
@@ -98,7 +136,7 @@ n <- htmlwidgets::onRender(n, jsCode =
     
     // Moving AROUND Node 
     d3.selectAll(".node").on("mousemove", function() {
-      d3.select("#tooltip").style("left", d3.event.pageX - 60 + "px").style("top", d3.event.pageY + 20 + "px");
+      d3.select("#tooltip").style("left", d3.event.pageX + 20 + "px").style("top", d3.event.pageY + 20 + "px");
     })
     
     // Moving ONTO Link 
@@ -106,7 +144,7 @@ n <- htmlwidgets::onRender(n, jsCode =
       d3.select(this).style("opacity", link_opacity_select);
       
       // Show tooltip & update text
-      d3.select("#tooltip").style("left", d3.event.pageX - 60 + "px").style("top", d3.event.pageY + 20 + "px");
+      d3.select("#tooltip").style("left", d3.event.pageX + 20 + "px").style("top", d3.event.pageY + 20 + "px");
       d3.select("#tooltip").style("opacity", 1); //.text(x.nodes.name[x.links.source[d]] + "->" + x.nodes.name[x.links.target[d]] + " " + x.links.value[d]);
       d3.select("#tooltip").html(link_tooltip_html[0] + x.nodes.name[x.links.source[d]] + link_tooltip_html[1] + x.nodes.name[x.links.target[d]]  + link_tooltip_html[2] + x.links.value[d] + link_tooltip_html[3]);
     });
@@ -121,10 +159,7 @@ n <- htmlwidgets::onRender(n, jsCode =
     
     // Moving AROUND Link 
     d3.selectAll(".link").on("mousemove", function() {
-      d3.select("#tooltip").style("left", d3.event.pageX - 60 + "px").style("top", d3.event.pageY + 20 + "px");
+      d3.select("#tooltip").style("left", d3.event.pageX + 20 + "px").style("top", d3.event.pageY + 20 + "px");
     })
   }'
 )
-
-# Finally, display the visualization
-n
