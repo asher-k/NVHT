@@ -13,6 +13,7 @@ ui <- dashboardPage(skin="black",
                  <li><b>Hydronyms</b>: names of bodies of water.</li>
                  <li><b>Oronyms</b>: names of hills or mountains.</li>
                  <li><b>Oikonyms</b>: names of homes, towns, or other inhabited places.</li></ul>"),
+            HTML("<em><span style='font-size:9.0pt'>Please allow the application up to 30 seconds to load the data. This is a one-time delay.</span></em>"),
             style = "padding:10px; text-align: justify;"),
         hr(),
         sliderInput("tab_entries", "# of Table Entries in Tooltip:", min = 5, max = 15, value = 10),
