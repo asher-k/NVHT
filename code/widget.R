@@ -73,7 +73,7 @@ tooltip <- 'function(el, x) {
            next_node = sorted[i];
            tooltip_info += node_tooltip_html[4] + node_tooltip_html[5] + x.nodes.name[next_node[0]] + "&nbsp;&nbsp;&nbsp;&nbsp;" + node_tooltip_html[6] + node_tooltip_html[5] + next_node[1] + node_tooltip_html[6] + node_tooltip_html[7]; // x.nodes.name[nodes[node_index]] nodes_s[node_index]
         }
-        if(nodes.length > 5){
+        if(nodes.length > max_table_entries){
           r_conns = nodes.length-max_table_entries
           tooltip_info += node_tooltip_html[4] + node_tooltip_html[5] + "and " + r_conns + " others..." + node_tooltip_html[6] + node_tooltip_html[7];
         }

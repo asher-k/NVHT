@@ -6,11 +6,11 @@ library(networkD3)
 ui <- dashboardPage(skin="black",
   dashboardHeader(title = "Co-occurences of Toponyms in Hittite Texts", titleWidth = 450),
   sidebar <- dashboardSidebar(
-        div(h1("About"),
-            p("Intro here"), style = "padding:10px"),
+        div(h2("About"),
+            p("This page presents a network view of the co-occurences of toponyms (place names) in Hittite documents."), style = "padding:10px; text-align: justify;"),
         hr(),
-        sliderInput("tab_entries", "# of Table Entries in Tooltip:", min = 5, max = 25, value = 5),
-        sliderInput("min_occs", "Req. # of Occurences in Docs:", min = 0, max = 20, value = 0),
+        sliderInput("tab_entries", "# of Table Entries in Tooltip:", min = 5, max = 15, value = 10),
+        sliderInput("min_occs", "Req. # of Document Occurences:", min = 1, max = 20, value = 10),
         checkboxInput("isolates","Hide Isolated Toponyms", FALSE),
         hr(),
         div(p("Credit"), style = "padding:10px")
