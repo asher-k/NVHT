@@ -1,14 +1,15 @@
 library(plyr)
 library(dplyr)
+library(readr)
 
 # Define data location
 in_path <- "./toponym_data/"
 
 # Load initial data and add category columns
-oronyms <- distinct(read.csv(paste(in_path, "oronym.csv", sep="")))
-hydronyms <- distinct(read.csv(paste(in_path, "hydronym.csv", sep="")))
-choronyms <- distinct(read.csv(paste(in_path, "choronym.csv", sep="")))
-oikonyms <- distinct(read.csv(paste(in_path, "oikonym.csv", sep="")))
+oronyms <- distinct(read_csv(paste(in_path, "oronym.csv", sep=""),locale = locale(encoding = "Windows-1252")))
+hydronyms <- distinct(read_csv(paste(in_path, "hydronym.csv", sep=""), locale = locale(encoding = "Windows-1252")))
+choronyms <- distinct(read_csv(paste(in_path, "choronym.csv", sep=""), locale = locale(encoding = "Windows-1252")))
+oikonyms <- distinct(read_csv(paste(in_path, "oikonym.csv", sep=""), locale = locale(encoding = "Windows-1252")))
 oronyms$Type <- "Orornym"
 hydronyms$Type <- "Hydronym"
 choronyms$Type <- "Choronym"
@@ -29,12 +30,13 @@ relations <- data.frame(matrix(ncol = 3, nrow = 0))
 
 # Construct unique relations between entries
 for(doc in unique(toponyms$Textstelle)){
-  docs <- sort(unique(toponyms[toponyms$Textstelle == doc, "Toponym"]))
+  docs <- pull(unique(toponyms[toponyms$Textstelle == doc, "Toponym"]))
   if(length(docs) < 2)   # Documents with only 1 entry are irrelevant
     # message(paste("Only 1 entry for", doc))
     next
   combos <- combn(docs, 2)
   combos <- data.frame(combos[1,], combos[2,], doc)
+  
   relations <- rbind(relations, combos)
 }
 colnames(relations) <- c("To", "From", "Document")
