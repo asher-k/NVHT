@@ -2,7 +2,7 @@ library(plyr)
 library(dplyr)
 
 # Define data location
-in_path <- "../toponym_data/"
+in_path <- "./toponym_data/"
 
 # Load initial data and add category columns
 oronyms <- distinct(read.csv(paste(in_path, "oronym.csv", sep="")))
