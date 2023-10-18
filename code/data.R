@@ -3,7 +3,7 @@ library(dplyr)
 library(readr)
 
 # Define data location
-in_path <- "./toponym_data/"
+in_path <- "../toponym_data/"
 
 # Load initial data and add category columns
 oronyms <- distinct(read_csv(paste(in_path, "oronym.csv", sep=""),locale = locale(encoding = "Windows-1252")))

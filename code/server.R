@@ -1,10 +1,11 @@
 library(shiny) 
 library(networkD3)
+library(readr)
 
-# Back-end functionality of the app. First run required scripts to load/preprocess data and visuals
-source("data.R",local = TRUE)
-source("widget.R",local = TRUE)
-source("viz.R",local = TRUE)
+# Back-end functionality of the app. Load/preprocess data and tooltip
+source("widget.R", local = TRUE)
+ecs <- read_csv("./shiny_data/ecs.csv")
+rcs <- read_csv("./shiny_data/rcs.csv")
 
 # Helper function to reindex relationships with nodes  after some have been removed
 reindex_data <- function(r, e, inv){
