@@ -6,6 +6,39 @@ source("data.R",local = TRUE)
 source("widget.R",local = TRUE)
 source("viz.R",local = TRUE)
 
+# Helper function to reindex relationships with nodes  after some have been removed
+reindex_data <- function(r, e, inv){
+  old <- c(1:nrow(e))
+  old <- old[-inv]-1  # old indices
+  e <- e[-inv,]  # remove invalid toponyms
+  new <- c(1:nrow(e)) # new indices
+  rownames(e) <- new
+  new <- new-1
+  
+  r$To <- mapvalues(r$To, old, new, warn_missing = FALSE)
+  r$From <- mapvalues(r$From, old, new, FALSE)
+  return(list(r, e))
+}
+
+# Function to remove isolates (Toponyms with 0 connections) from the data
+remove_isolates <- function(r, e){
+  indices = c(1:nrow(e))-1
+  inv <- which(!(indices %in% c(r$To, r$From)))
+  list[r, e] <- reindex_data(r, e, inv)
+  return(list(r, e))
+}
+
+# Function to remove Toponyms under a given threshold
+remove_size <- function(r, e, n){
+  inv <- which(e[ , 2] < n)
+  m1 <- inv-1
+  r <- r[!r$To %in% m1,] 
+  r <- r[!r$From %in% m1,] # remove rows with links we don't care about
+  
+  list[r, e] <- reindex_data(r, e, inv)
+  return(list(r, e))
+}
+
 # Then define functionality
 server <- function(input, output) {
     # Rendered Network
