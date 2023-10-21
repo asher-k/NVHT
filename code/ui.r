@@ -6,16 +6,17 @@ library(networkD3)
 ui <- dashboardPage(
   dashboardHeader(title="Co-occurences of Toponyms in Hittite Texts", titleWidth = 450), 
   sidebar <- dashboardSidebar(
-      div(h2("Settings"), style = "padding:10px; text-align: justify;"),
+      div(style = "padding:10px; text-align: justify;"),
       selectizeInput(
-        inputId = "searchme", 
+        inputId = "topsearch", 
         label = "Toponym Search",
         multiple = FALSE,
-        choices = c("Enter toponym..." = "", c()),
+        choices = NULL,
         options = list(
           create = FALSE,
           placeholder = "Enter toponym...",
           maxItems = '1',
+          onInitialize = I('function() { this.setValue("A["); }'),
           onDropdownOpen = I("function($dropdown) {if (!this.lastQuery.length) {this.close(); this.settings.openOnFocus = false;}}"),
           onType = I("function (str) {if (str === \"\") {this.close();}}")
         )
