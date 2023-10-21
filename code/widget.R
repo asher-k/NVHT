@@ -152,7 +152,7 @@ tooltip <- 'function(el, x) {
           n_y = (bounds[0][1] + bounds[1][1]) / 2, 
           scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / height))), 
           translate = [width / 2 - scale * n_x, height / 2 - scale * n_y];
-      legend_layer.append("text").text(scale).attr("x", 50).attr("y", 500);
+      legend_layer.append("text").text(searched).attr("x", 50).attr("y", 500);
       
       // pan/zoom to location of node
       svg.transition().duration(500).call(zoom.translate(translate).scale(scale).event);

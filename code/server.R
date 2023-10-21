@@ -76,7 +76,9 @@ server <- function(input, output, session) {
       
       # Linkages to tooltip
       n$x$options$TableRows = trs
-      n$x$options$SearchedNode = isolate({input$topsearch})
+      n$x$options$SearchedNode = input$topsearch
+      print(n$x$options$SearchedNode)
+
       n <- htmlwidgets::onRender(n, tooltip)
     })
 }

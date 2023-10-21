@@ -16,7 +16,7 @@ ui <- dashboardPage(
           create = FALSE,
           placeholder = "Enter toponym...",
           maxItems = '1',
-          onInitialize = I('function() { this.setValue("A["); }'),
+          onInitialize = I('function() { this.setValue(""); }'),
           onDropdownOpen = I("function($dropdown) {if (!this.lastQuery.length) {this.close(); this.settings.openOnFocus = false;}}"),
           onType = I("function (str) {if (str === \"\") {this.close();}}")
         )
