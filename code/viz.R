@@ -5,7 +5,7 @@ library(stringi)
 library(plyr)
 library(gsubfn)
 
-# run locally? exportr dir?
+# run locally? export dir?
 local <- FALSE
 out_dir <- "./shiny_data/"
 
@@ -46,7 +46,6 @@ if(local){
                     fontSize = 20, fontFamily = "serif", linkColour = "#666", opacity=1.0, opacityNoHover = TRUE, legend=T
   )
   n$x$options <- c(n$x$options, TableRows=def_table_rows)
-  n$x$options <- c(n$x$options, SearchedNode="")
   n <- htmlwidgets::onRender(n, jsCode = tooltip)
   # And Display! (local only)
   n

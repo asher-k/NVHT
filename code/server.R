@@ -1,4 +1,5 @@
 library(shiny) 
+library(shinyjs)
 library(networkD3)
 library(readr)
 library(plyr)
@@ -44,6 +45,13 @@ remove_size <- function(r, e, n){
   return(list(r, e))
 }
 
+# Function to remove diacritics from the non-standard H/h to improve search results
+update_h_diacritic <- function(d){
+  d <- gsub("Ḫ", "H", d)
+  d <- gsub("ḫ", "h", d)
+  return(d)
+}
+
 # Then define functionality
 server <- function(input, output, session) {
     # Session data, keeping original data intact
@@ -59,7 +67,7 @@ server <- function(input, output, session) {
       if( input$isolates ){  # remove isolates if enabled
         list[updated_rcs, updated_ecs] <- remove_isolates(updated_rcs, updated_ecs)
       }
-      updateSelectInput(session = session, inputId = "topsearch", choices = updated_ecs$Toponym)
+      updateSelectInput(session = session, inputId = "topsearch", choices = update_h_diacritic(updated_ecs$Toponym))
       return(list(trs, updated_rcs, updated_ecs))
     })
   
@@ -76,9 +84,10 @@ server <- function(input, output, session) {
       
       # Linkages to tooltip
       n$x$options$TableRows = trs
-      n$x$options$SearchedNode = input$topsearch
-      print(n$x$options$SearchedNode)
-
       n <- htmlwidgets::onRender(n, tooltip)
+    })
+    
+    observeEvent(input$topsearch, {
+      js$searchNode(input$topsearch)
     })
 }

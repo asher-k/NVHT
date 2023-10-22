@@ -1,6 +1,10 @@
 library(shiny)  
+library(shinyjs)
 library(shinydashboard)
 library(networkD3)
+
+# Load any necessary code
+source("widget.R", local = TRUE)
 
 # Define the UI used in the app
 ui <- dashboardPage(
@@ -18,8 +22,7 @@ ui <- dashboardPage(
           maxItems = '1',
           onInitialize = I('function() { this.setValue(""); }'),
           onDropdownOpen = I("function($dropdown) {if (!this.lastQuery.length) {this.close(); this.settings.openOnFocus = false;}}"),
-          onType = I("function (str) {if (str === \"\") {this.close();}}")
-        )
+          onType = I("function (str) {if (str === \"\") {this.close();}}"))
       ),
       sliderInput("tab_entries", "# of Table Entries in Tooltip:", min = 5, max = 15, value = 10),
       sliderInput("min_occs", "Req. # of Document Occurences:", min = 1, max = 20, value = 10),
@@ -39,7 +42,9 @@ ui <- dashboardPage(
                All data rights and credit to the owners and maintainers of the platform. 
                <br>Dashboard by Asher Stout<a href='https://github.com/asher-k'><img style= 'display:inline-block; height:12px; width:12px;' src='https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/OOjs_UI_icon_link-ltr-invert_slanted.svg/640px-OOjs_UI_icon_link-ltr-invert_slanted.svg.png'></a>"), style = "padding:10px")
   ),
-  body <- dashboardBody(tags$style(type = "text/css", "#Network {height: calc(100vh - 5px) !important;}"),
+  body <- dashboardBody(useShinyjs(),
+                        extendShinyjs(text = js_search, functions = c("searchNode")),
+                        tags$style(type = "text/css", "#Network {height: calc(100vh - 5px) !important;}"),
                         tags$style(HTML("#sidebarItemExpanded > ul > :last-child {position: absolute;bottom: 0;width: 100%;}")),
           fillPage(forceNetworkOutput("Network")) ),
   dashboardPage(dashboardHeader(title="NVHT: Network Visualization of Hittite Toponyms"), sidebar,body),

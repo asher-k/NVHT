@@ -2,7 +2,6 @@
 tooltip <- 'function(el, x) {
     // display constants
     max_table_entries = x.options.TableRows;
-    searched = x.options.SearchedNode;
     link_opacity_default = "0.075";
     link_opacity_select = "0.9";
     node_tooltip_html = ["<center><p margin-bottom:0px;><span style=\'font-size: 24px;\'>", 
@@ -130,31 +129,44 @@ tooltip <- 'function(el, x) {
     var legend_layer = d3.select("#legend-layer");
     d3.selectAll(".legend")
       .each(function() { legend_layer.append(() => this); });
-      
-    // Moving to searched node 
-    var svg = d3.select("svg");
-    function zoomed() {
-      svg.select("g").attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-    }   
-    var zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed);   
+}'
+
+# JS pan/zoom behavior on node search
+js_search <- 'shinyjs.searchNode = function(searched){
     if(searched != ""){
+    
+      // Setup movements to searched node 
+      var svg = d3.select("svg");
+      var k = svg.append("g");
+      function zoomed() {
+        svg.select(".zoom-layer").attr("transform", d3.event.transform);
+      }
+      var zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", zoomed);
+
       //Find the node
-      s_node = d3.selectAll(".node").select("circle").filter(function(d, i) { return d.name == searched; }).datum();
-      
+      s_node = d3.selectAll(".node").select("circle").filter(function(d, i) { 
+        n = d.name;
+        return n.replace(/Ḫ/g,"H").replace(/ḫ/g, "h") == searched; 
+      }).datum();
+  
       // compute locations for transition & zoom
-      var width = d3.select("svg").node().clientWidth / 2;
-      var height = d3.select("svg").node().clientHeight / 2;
+      var width = d3.select("svg").node().clientWidth / 1;
+      var height = d3.select("svg").node().clientHeight / 1;
       var s_x = s_node.x, s_y = s_node.y;
-      var bounds = [[s_x-100, s_y-100],[s_x+100, s_y+100]];
+      var z = 160;
+      var bounds = [[s_x-z, s_y-z],[s_x+z, s_y+z]];
+      
       var dx = bounds[1][0] - bounds[0][0], 
           dy = bounds[1][1] - bounds[0][1], 
           n_x = (bounds[0][0] + bounds[1][0]) / 2, 
           n_y = (bounds[0][1] + bounds[1][1]) / 2, 
-          scale = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / height))), 
-          translate = [width / 2 - scale * n_x, height / 2 - scale * n_y];
-      legend_layer.append("text").text(searched).attr("x", 50).attr("y", 500);
+          sc = Math.max(1, Math.min(8, 0.9 / Math.max(dx / width, dy / height))), 
+          trs = [width / 2 - sc * n_x, height / 2 - sc * n_y];
+
+      // d3.select("#legend-layer").append("text").text(trs).attr("x", 50).attr("y", 300);  // positional logging/sanity check
       
       // pan/zoom to location of node
-      svg.transition().duration(500).call(zoom.translate(translate).scale(scale).event);
+      svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(trs[0], trs[1]).scale(sc));
+      svg.select(".zoom-layer").attr("transform", "translate(" + trs[0] + "," + trs[1] + ")scale(" + sc + ")");
     }
-  }'
+}'
