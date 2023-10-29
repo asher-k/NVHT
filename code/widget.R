@@ -15,7 +15,7 @@ tooltip <- 'function(el, x) {
     // Tooltip/panel HTMLs
     node_tooltip_html = ["<center><p margin-bottom:0px;><span style=\'font-size: 24px;\'>", 
                          "</span> <span style=\'font-size: 12px;\'>", 
-                         "</span><hr><span style=\'font-size: 14px;\'> In ", 
+                         "</span><hr style=\'border-color: #D3D3D3\'><span style=\'font-size: 14px;\'> In ", 
                          " documents</span><br><span style=\'font-size: 14px;\'>Mentioned with</span><table>",
                          "<tr>", "<td>", "</td>", "</tr>",
                          "</table></p></center>"]
@@ -23,20 +23,70 @@ tooltip <- 'function(el, x) {
                          " &#8596; ", 
                          "</span><br>", 
                          " documents</p></center>"]
-    info_panel_html = ["<center><p margin-bottom:1px;><span style=\'font-size: 18px;\'>", 
+    info_panel_default = ["<center><p margin-bottom:1px;><span style=\'font-size: 14px; font-style: italic;\'>", 
                          "</span><br>", 
                          "</p></center>"]
+    info_panel_select = ["<center><p margin-bottom:1px;><span style=\'font-size: 16px;\'>", 
+                         "</span></p></center>"]
     
     // Setup Hover Tooltip & Info panel styling
     d3.select("body").append("div").attr("id", "tooltip")
                                    .style("position", "absolute")
                                    .style("opacity", "0")
-                                   .style("background-color", "white")
+                                   .style("background-color", "#F1F1F1")
                                    .style("border", "solid")
+                                   .style("border-color", "#D3D3D3")
                                    .style("border-width", "1px")
                                    .style("border-radius", "5px")
                                    .style("padding", "5px")
                                    .style("margin", "0px");
+                                   
+    // Keep legend at the same scale irrespective of zoom/pan
+    d3.select("svg").append("g").attr("id", "legend-layer");
+    var legend_layer = d3.select("#legend-layer");
+    d3.selectAll(".legend").each(function() { legend_layer.append(() => this); });
+    
+    // Define initial values of Information Box in the Top Right of screen
+    d3.select("svg").append("g").attr("id", "info-layer");
+    var info_layer = d3.select("#info-layer").append("foreignObject");
+    var info_w = 360, 
+        info_h = 540,
+        init_w = 180,
+        init_h = 40;
+    info_layer.append("xhtml:div")
+              .attr("id", "infobox")
+              .style("position", "absolute")
+              .style("opacity", "0.9")
+              .style("background-color", "#F1F1F1")
+              .style("border", "solid")
+              .style("border-color", "#D3D3D3")
+              .style("border-width", "1px")
+              .style("border-radius", "5px")
+              .style("padding", "5px")
+              .style("margin", "0px");
+    var infobox = d3.select("#infobox");
+    
+    // Function to reset the infobox to initialized values
+    function reset_infobox(){
+      info_layer.attr("width", init_w).attr("height", init_h).attr("y", 0).attr("x", (d3.select("svg").node().clientWidth/1)-init_w);
+      infobox.style("width", init_w + "px")
+             .style("height", init_h + "px")
+             .html(info_panel_default[0] + "Select a Toponym or Link" + info_panel_default[1] + info_panel_default[2]);
+    }
+    reset_infobox();
+
+    // Move Info Box on window resize
+    var timeOutFunctionId;
+    function trnsfinf(){
+      np = info_layer.attr("x");
+      dp = (d3.select("svg").node().clientWidth/1)-info_layer.attr("width");
+      np = dp-np;
+      info_layer.attr("transform"," translate("+np+",0)");
+    }
+    window.addEventListener("resize", function(){
+      clearTimeout(timeOutFunctionId); 
+      timeOutFunctionId = setTimeout(trnsfinf, 1); 
+    });
 
     // Moving ONTO Node 
     d3.selectAll(".node").on("mouseenter", function(e, d){
@@ -49,7 +99,7 @@ tooltip <- 'function(el, x) {
       
       // Show tooltip & update HTML with relevant data about the Toponym
       d3.select("#tooltip").style("left", d3.event.pageX + 20 + "px").style("top", d3.event.pageY + 20 + "px");
-      d3.select("#tooltip").style("opacity", 1); 
+      d3.select("#tooltip").style("opacity", 0.9); 
       tooltip_info = node_tooltip_html[0] + x.nodes.name[d] + node_tooltip_html[1] + x.nodes.group[d]  + node_tooltip_html[2] + x.nodes.nodesize[d] + node_tooltip_html[3];
       
       // Get all links with other nodes for this node and their corresponding strengths
@@ -112,7 +162,7 @@ tooltip <- 'function(el, x) {
       
       // Show tooltip & update text
       d3.select("#tooltip").style("left", d3.event.pageX + 20 + "px").style("top", d3.event.pageY + 20 + "px");
-      d3.select("#tooltip").style("opacity", 1); //.text(x.nodes.name[x.links.source[d]] + "->" + x.nodes.name[x.links.target[d]] + " " + x.links.value[d]);
+      d3.select("#tooltip").style("opacity", 0.9); 
       d3.select("#tooltip").html(link_tooltip_html[0] + x.nodes.name[x.links.source[d]] + link_tooltip_html[1] + x.nodes.name[x.links.target[d]]  + link_tooltip_html[2] + x.links.value[d] + link_tooltip_html[3]);
     });
     
@@ -130,48 +180,41 @@ tooltip <- 'function(el, x) {
       d3.select("#tooltip").style("left", d3.event.pageX + 20 + "px").style("top", d3.event.pageY + 20 + "px");
     });
     
-    // Keeping legend at the same scale irrespective of zoom/pan
-    d3.select("svg").append("g").attr("id", "legend-layer");
-    var legend_layer = d3.select("#legend-layer");
-    d3.selectAll(".legend").each(function() { legend_layer.append(() => this); });
-    
-    // Keeping info box at the same scale
-    d3.select("svg").append("g").attr("id", "info-layer");
-    var info_layer = d3.select("#info-layer").append("foreignObject");
-    var info_w = 360, 
-        info_h = 540;
-    info_layer.attr("width", info_w).attr("height", info_h).attr("y", 0).attr("x", (d3.select("svg").node().clientWidth/1)-info_w)
-              .append("xhtml:div").attr("id", "infobox")
-                                  .style("position", "absolute")
-                                  .style("width", info_w + "px")
-                                  .style("height", info_h + "px")
-                                  .style("opacity", "1")
-                                  .style("background-color", "gray")
-                                  .style("border", "solid")
-                                  .style("border-width", "1px")
-                                  .style("border-radius", "5px")
-                                  .style("padding", "5px")
-                                  .style("margin", "0px");
-    var infobox = d3.select("#infobox");
-    infobox.html(info_panel_html[0] + "Test Info Box" + info_panel_html[1] + info_panel_html[2]);
-    
-    // Move info layer on window resize
-    var timeOutFunctionId;
-    function trnsfinf(){
-      np = info_layer.attr("x");
-      dp = (d3.select("svg").node().clientWidth/1)-info_w;
-      np = dp-np;
-      info_layer.attr("transform"," translate("+np+",0)");
+    // Function for adding exit button to info box
+    function addQuit(){
+      infobox.append("div")
+             .attr("class", "lead")
+             .html("<button id=resetButton style=\' position:absolute; top:1px; left:0px; border: none; height:32px; width:32px;\'><img src=\'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/CloseWindow.svg/800px-CloseWindow.png\' style=\'width:28px\'></button>");
+      document.getElementById("resetButton").addEventListener("click", reset_infobox);
     }
-    window.addEventListener("resize", function(){
-      clearTimeout(timeOutFunctionId); 
-      timeOutFunctionId = setTimeout(trnsfinf, 1); 
-    });
     
     // On Node Click
     d3.selectAll(".node").on("click", function(e, d) {
       clicked_name = x.nodes.name[d];
-      infobox.html(info_panel_html[0] + clicked_name + info_panel_html[1] + info_panel_html[2]);
+      
+      // Update the Information Box with relevant information & move it to correct pos
+      info_layer.attr("width", info_w).attr("height", info_h).attr("x", (d3.select("svg").node().clientWidth/1)-info_w);
+      infobox.style("width", info_w + "px").style("height", info_h + "px");
+      infobox.html(info_panel_select[0] + clicked_name + info_panel_select[1]);
+      
+      // Finish with adding button/window transformation
+      addQuit();
+      trnsfinf();
+    });
+    
+    // On Link Click
+    d3.selectAll(".link").on("click", function(e, d) {
+      source_name = x.nodes.name[x.links.source[d]];
+      target_name = x.nodes.name[x.links.target[d]];
+    
+      // Update the Information Box with relevant information & move it to correct pos
+      info_layer.attr("width", info_w).attr("height", info_h).attr("x", (d3.select("svg").node().clientWidth/1)-info_w);
+      infobox.style("width", info_w + "px").style("height", info_h + "px");
+      
+      infobox.html(info_panel_select[0] + source_name + link_tooltip_html[1] + target_name + info_panel_select[1]);
+      
+      // Finish with adding button/window transformation
+      addQuit();
       trnsfinf();
     });
 }'
