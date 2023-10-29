@@ -4,6 +4,15 @@ tooltip <- 'function(el, x) {
     max_table_entries = x.options.TableRows;
     link_opacity_default = "0.075";
     link_opacity_select = "0.9";
+    
+    // Additional default settings
+    d3.selectAll(".node text").style("stroke", "black");
+    d3.selectAll(".node text").attr("stroke-width", "0");
+    d3.selectAll(".node").select("circle").style("opacity", "0.475");
+    d3.selectAll(".node").select("text").style("opacity", "0.8");
+    d3.selectAll(".link").style("opacity", link_opacity_default);
+    
+    // Tooltip/panel HTMLs
     node_tooltip_html = ["<center><p margin-bottom:0px;><span style=\'font-size: 24px;\'>", 
                          "</span> <span style=\'font-size: 12px;\'>", 
                          "</span><hr><span style=\'font-size: 14px;\'> In ", 
@@ -14,15 +23,11 @@ tooltip <- 'function(el, x) {
                          " &#8596; ", 
                          "</span><br>", 
                          " documents</p></center>"]
-  
-    // Additional default settings
-    d3.selectAll(".node text").style("stroke", "black");
-    d3.selectAll(".node text").attr("stroke-width", "0");
-    d3.selectAll(".node").select("circle").style("opacity", "0.475");
-    d3.selectAll(".node").select("text").style("opacity", "0.8");
-    d3.selectAll(".link").style("opacity", link_opacity_default);
+    info_panel_html = ["<center><p margin-bottom:1px;><span style=\'font-size: 18px;\'>", 
+                         "</span><br>", 
+                         "</p></center>"]
     
-    // Setup Hover Tooltip
+    // Setup Hover Tooltip & Info panel styling
     d3.select("body").append("div").attr("id", "tooltip")
                                    .style("position", "absolute")
                                    .style("opacity", "0")
@@ -32,6 +37,7 @@ tooltip <- 'function(el, x) {
                                    .style("border-radius", "5px")
                                    .style("padding", "5px")
                                    .style("margin", "0px");
+
     // Moving ONTO Node 
     d3.selectAll(".node").on("mouseenter", function(e, d){
       d3.selectAll(".node text").style("font-size", "20");
@@ -127,8 +133,47 @@ tooltip <- 'function(el, x) {
     // Keeping legend at the same scale irrespective of zoom/pan
     d3.select("svg").append("g").attr("id", "legend-layer");
     var legend_layer = d3.select("#legend-layer");
-    d3.selectAll(".legend")
-      .each(function() { legend_layer.append(() => this); });
+    d3.selectAll(".legend").each(function() { legend_layer.append(() => this); });
+    
+    // Keeping info box at the same scale
+    d3.select("svg").append("g").attr("id", "info-layer");
+    var info_layer = d3.select("#info-layer").append("foreignObject");
+    var info_w = 360, 
+        info_h = 540;
+    info_layer.attr("width", info_w).attr("height", info_h).attr("y", 0).attr("x", (d3.select("svg").node().clientWidth/1)-info_w)
+              .append("xhtml:div").attr("id", "infobox")
+                                  .style("position", "absolute")
+                                  .style("width", info_w + "px")
+                                  .style("height", info_h + "px")
+                                  .style("opacity", "1")
+                                  .style("background-color", "gray")
+                                  .style("border", "solid")
+                                  .style("border-width", "1px")
+                                  .style("border-radius", "5px")
+                                  .style("padding", "5px")
+                                  .style("margin", "0px");
+    var infobox = d3.select("#infobox");
+    infobox.html(info_panel_html[0] + "Test Info Box" + info_panel_html[1] + info_panel_html[2]);
+    
+    // Move info layer on window resize
+    var timeOutFunctionId;
+    function trnsfinf(){
+      np = info_layer.attr("x");
+      dp = (d3.select("svg").node().clientWidth/1)-info_w;
+      np = dp-np;
+      info_layer.attr("transform"," translate("+np+",0)");
+    }
+    window.addEventListener("resize", function(){
+      clearTimeout(timeOutFunctionId); 
+      timeOutFunctionId = setTimeout(trnsfinf, 1); 
+    });
+    
+    // On Node Click
+    d3.selectAll(".node").on("click", function(e, d) {
+      clicked_name = x.nodes.name[d];
+      infobox.html(info_panel_html[0] + clicked_name + info_panel_html[1] + info_panel_html[2]);
+      trnsfinf();
+    });
 }'
 
 # JS pan/zoom behavior on node search
