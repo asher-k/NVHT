@@ -12,7 +12,7 @@ rcs <- read_csv("./shiny_data/rcs.csv")
 ColourScale <- 'd3.scaleOrdinal().domain(["Choronym", "Hydronym", "Oronym", "Oikonym"]).range(["#f2428f", "#41a7e2", "#9e7955", "#bcb6d9"]);'
 def_table_rows <- 5
 
-# Helper function to reindex relationships with nodes  after some have been removed
+# Helper function to reindex relationships with nodes after some have been removed
 reindex_data <- function(r, e, inv){
   old <- c(1:nrow(e))
   old <- old[-inv]-1  # old indices
@@ -82,8 +82,9 @@ server <- function(input, output, session) {
         colourScale = ColourScale, linkDistance = 200, charge = -100, zoom=T,
         fontSize = 20, fontFamily = "serif", linkColour = "#666", opacity=1.0, opacityNoHover = TRUE, legend=T)
       
-      # Linkages to tooltip
+      # Linkages to tooltip & info panel
       n$x$options$TableRows = trs
+      n$x$options$Documents = docs
       n <- htmlwidgets::onRender(n, tooltip)
     })
     

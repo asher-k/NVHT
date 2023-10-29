@@ -6,7 +6,7 @@ library(plyr)
 library(gsubfn)
 
 # run locally? export dir?
-local <- FALSE
+local <- TRUE
 out_dir <- "./shiny_data/"
 
 # First reformat Toponym counts
@@ -30,8 +30,10 @@ rcs$From <- as.numeric(lapply(rcs$From, update_func))
 
 # Rescale frequency counts for entries/relationships to scale better with the figure (optional)
 ecs$Toponym <- gsub(":[a-zA-Z]*", "", ecs$Toponym)  # remove :cat from Toponyms
-# rcs$total_count <- rescale(rcs$total_count, t=c(1,5))
-# ecs$Freq <- rescale(ecs$Freq, t=c(1,5))
+
+# Update documents to ensure Toponyms are displayed correctly in info table
+documents$Fundort <- stri_unescape_unicode(gsub("<U\\+(....)>", "\\\\u\\1", documents$Fundort))
+documents$Toponyms <- stri_unescape_unicode(gsub("<U\\+(....)>", "\\\\u\\1", documents$Toponyms))
 
 # Define params for the network graph 
 ColourScale <- 'd3.scaleOrdinal().domain(["Choronym", "Hydronym", "Oronym", "Oikonym"]).range(["#f2428f", "#41a7e2", "#9e7955", "#bcb6d9"]);'
@@ -46,10 +48,12 @@ if(local){
                     fontSize = 20, fontFamily = "serif", linkColour = "#666", opacity=1.0, opacityNoHover = TRUE, legend=T
   )
   n$x$options <- c(n$x$options, TableRows=def_table_rows)
+  n$x$options$Documents = documents
   n <- htmlwidgets::onRender(n, jsCode = tooltip)
   # And Display! (local only)
   n
 }else{
   write.csv(ecs, paste(out_dir, "ecs.csv" ,sep=""), row.names=FALSE) 
-  write.csv(rcs, paste(out_dir, "rcs.csv" ,sep=""), row.names=FALSE) 
+  write.csv(rcs, paste(out_dir, "rcs.csv" ,sep=""), row.names=FALSE)
+  write.csv(documents, paste(out_dir, "doc.csv" ,sep=""), row.names=FALSE) 
 }

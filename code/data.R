@@ -50,3 +50,10 @@ colnames(entry_counts) <- c("Toponym", "Freq")
 relation_counts <- relations
 relation_counts <- group_by(relation_counts, To, From) %>% 
   summarise(total_count=n(),.groups = 'drop') %>% as.data.frame()  
+
+# Restructure toponym data for displaying document information
+mergedoc <- function(x){
+  return(paste(x, collapse=', ' ))
+}
+documents <- toponyms[,-c(1:3, 10)]
+documents <- documents %>% group_by(Textstelle, CTH, Fundort, Dat, RefNr) %>% summarise(Toponyms = mergedoc(Toponym))
