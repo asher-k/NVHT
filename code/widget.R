@@ -12,22 +12,36 @@ tooltip <- 'function(el, x) {
     d3.selectAll(".node").select("text").style("opacity", "0.8");
     d3.selectAll(".link").style("opacity", link_opacity_default);
     
-    // Tooltip/panel HTMLs
+    // Tooltip HTMLs
     node_tooltip_html = ["<center><p margin-bottom:0px;><span style=\'font-size: 24px;\'>", 
                          "</span> <span style=\'font-size: 12px;\'>", 
                          "</span><hr style=\'border-color: #D3D3D3\'><span style=\'font-size: 14px;\'> In ", 
                          " documents</span><br><span style=\'font-size: 14px;\'>Mentioned with</span><table>",
                          "<tr>", "<td>", "</td>", "</tr>",
-                         "</table></p></center>"]
+                         "</table></p></center>"];
     link_tooltip_html = ["<center><p margin-bottom:1px;><span style=\'font-size: 18px;\'>", 
                          " &#8596; ", 
                          "</span><br>", 
-                         " documents</p></center>"]
+                         " documents</p></center>"];
+    
+    // Info Panel for Links
     info_panel_default = ["<center><p margin-bottom:1px;><span style=\'font-size: 14px; font-style: italic;\'>", 
                          "</span><br>", 
-                         "</p></center>"]
-    info_panel_select = ["<center><p margin-bottom:1px;><span style=\'font-size: 16px;\'>", 
-                         "</span></p></center>"]
+                         "</p></center>"];
+    info_panel_select = ["<center><p margin-bottom:1px;><span style=\'font-size: 24px;\'>", 
+                         "</span></p><hr style=\'border-color: #D3D3D3\'><div class=panel panel-default style=\'height: 452px;\'><div class=panel-heading style=\'height: 40px;\'>", " Shared Documents</div><div style=\'height: 411px; overflow-y: scroll;\'>",
+                         "<table class=table table-responsive table-hover><thead><tr><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>",
+                         "</tbody></div></div></center>"];
+    
+    // Info panel for Nodes (can switch between 2 tabs)
+    info_panel_node = ["<center> <p margin-bottom:1px;> <span style=\'font-size: 24px;\'>",
+                       "</span> </p> </center> <hr style=\'border-color: #D3D3D3\'>", 
+                       "<center><div class=row row-content> <div class=col-12 id=tabs> <ul class=nav nav-tabs> <li class=nav-items> <a class=nav-link role=tab data-toggle=tab href=#tab1>Co-occurrences</a> </li> <li class=nav-items><a class=nav-link role=tab data-toggle=tab href=#tab2>Isolated Occurrences</a> </li> </ul> </div> </div>",
+                       "<div class=panel panel-default style=\'height: 413px; width: 350px; border-radius: 4px;\'> <div class=tab-content>",
+                       "</div> </div> </center>"];
+                       
+    nodeLinkPanel = ["<div role=tabpanel class=tab-pane fade id=tab1>", "</div>"]
+    nodeIsoPanel = ["<div role=tabpanel class=tab-pane fade id=tab2>", "</div>"]
     
     // Setup Hover Tooltip & Info panel styling
     d3.select("body").append("div").attr("id", "tooltip")
@@ -127,7 +141,7 @@ tooltip <- 'function(el, x) {
       else{
         for(let i = 0; i < Math.min(nodes.length, max_table_entries); i++){
            next_node = sorted[i];
-           tooltip_info += node_tooltip_html[4] + node_tooltip_html[5] + x.nodes.name[next_node[0]] + "&nbsp;&nbsp;&nbsp;&nbsp;" + node_tooltip_html[6] + node_tooltip_html[5] + next_node[1] + node_tooltip_html[6] + node_tooltip_html[7]; // x.nodes.name[nodes[node_index]] nodes_s[node_index]
+           tooltip_info += node_tooltip_html[4] + node_tooltip_html[5] + x.nodes.name[next_node[0]] + "&nbsp;&nbsp;&nbsp;&nbsp;" + node_tooltip_html[6] + node_tooltip_html[5] + next_node[1] + node_tooltip_html[6] + node_tooltip_html[7];
         }
         if(nodes.length > max_table_entries){
           r_conns = nodes.length-max_table_entries
@@ -188,15 +202,68 @@ tooltip <- 'function(el, x) {
       document.getElementById("resetButton").addEventListener("click", reset_infobox);
     }
     
+    // HTML Table tags
+    var eo = "<td>",
+        ec = "</td>";
+    
     // On Node Click
     d3.selectAll(".node").on("click", function(e, d) {
       clicked_name = x.nodes.name[d];
       
-      // Update the Information Box with relevant information & move it to correct pos
+      // Get isolated documents and build table with them
+      docs = x.documents;
+      var matches = docs.Toponyms.reduce((a, e, i) => {
+        splits = e.split(/[:,]+/);
+        splits = splits.map(s => s.trim());
+        if (splits.includes(clicked_name) && splits.length === 2)
+            a.push(i);
+          return a;
+        }, []);
+      isolates = "<div class=panel-heading style=\'height: 40px;\'>" + matches.length +  " isolated occurrences</div>";
+      isolates += "<div style=\'height: 361px; width: 348px; overflow-y: scroll;\'><table class=table table-responsive table-hover><thead><tr><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>";
+      matches.forEach((m) => isolates += node_tooltip_html[4] + eo + docs.Textstelle[m] + ec + eo + docs.CTH[m] + ec + eo + docs.Fundort[m] + ec + eo + docs.Dat[m] + ec + eo + docs.RefNr[m] + ec + node_tooltip_html[7]);
+      isolates += "</tbody></table></div>";
+      
+      // Obtain shared document names & counts
+      matches = docs.Toponyms.reduce((a, e, i) => {
+        splits = e.split(/[:,]+/);
+        splits = splits.map(s => s.trim()); 
+        if (splits.includes(clicked_name) && !(splits.length === 2))
+            a.push(i);
+          return a;
+        }, []);
+      unique_links = matches.map(s => docs.Toponyms[s].split(/[,]+/));
+      unique_links = Array.from(new Set([].concat(...unique_links).map(s => s.trim())));
+      unique_links = unique_links.filter((t) => !t.includes(clicked_name+":"));
+      
+      unique_docs = matches.map((m) => docs.Toponyms[m]);
+      unique_docs = unique_docs.map((d) => d.split(/[,]+/));
+      ctcts = Object.fromEntries(unique_links.map(x => [x, 0])); // Connections to Counts (of connections)
+      unique_docs.forEach((a) => a.filter((t) => !t.includes(clicked_name+":")).forEach((t) => ctcts[t.trim()] += 1) );
+      
+      
+      // Construct inner & outer tables of shared documents
+      function innerTable(toponym){
+        inner = [`<tr class="collapse table_${toponym.split(/[:]+/).join("")}"><td colspan="999"><div><table class="table table-striped"><thead><tr><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>`, `</tbody></table></div></td></tr>`];
+        tab = inner[0];
+        matches.filter((t) => docs.Toponyms[t].includes(toponym)).forEach((d) => tab += "<tr>" + `${eo}${docs.Textstelle[d]}${ec}${eo}${docs.CTH[d]}${ec}${eo}${docs.Fundort[d]}${ec}${eo}${docs.Dat[d]}${ec}${eo}${docs.RefNr[d]}${ec}` + "</tr>");
+        return tab + inner[1];
+      }
+      connections = "<div class=col-sm-12><div class=panel-heading style=\'height: 40px;\'>" + unique_links.length +  " toponym connections</div>";
+      connections += "<div style=\'height: 361px; width: 348px; overflow-y: scroll;\'><table class=table table-responsive table-hover><thead><tr><th>Toponym</th><th># connecting docs</th><th></th></tr></thead><tbody>";
+      Object.keys(ctcts).sort().forEach((m) => connections += `<tr data-toggle=collapse id=table_${m.split(/[:]+/).join("")} data-target=.table_${m.split(/[:]+/).join("")}>` + eo + m.split(/[:]+/)[0] + ec + eo + ctcts[m] + ec + eo + "<button class=btn btn-default btn-sm>Expand</button>" + ec + "</tr>" + innerTable(m)); 
+      connections += "</tbody></table></div></div>"; 
+
+      // Update info box HTML content with all tables
+      info_html = info_panel_node[0] + clicked_name + info_panel_node[1] + info_panel_node[2] + info_panel_node[3] + nodeLinkPanel[0] + connections + nodeLinkPanel[1] + nodeIsoPanel[0] + isolates + nodeIsoPanel[1] + info_panel_node[4];
+      infobox.html(info_html);
+      
+      // Info Box HTML stylings & position
       info_layer.attr("width", info_w).attr("height", info_h).attr("x", (d3.select("svg").node().clientWidth/1)-info_w);
       infobox.style("width", info_w + "px").style("height", info_h + "px");
-      infobox.html(info_panel_select[0] + clicked_name + info_panel_select[1]);
-      
+      infobox.selectAll(".tab-content").style("padding", "10px").style("display", "flex").style("justify-content", "center");
+      infobox.selectAll("li").style("width", "46%").style("text-align", "center").style("display", "inline-block");
+
       // Finish with adding button/window transformation
       addQuit();
       trnsfinf();
@@ -206,12 +273,26 @@ tooltip <- 'function(el, x) {
     d3.selectAll(".link").on("click", function(e, d) {
       source_name = x.nodes.name[x.links.source[d]];
       target_name = x.nodes.name[x.links.target[d]];
-    
-      // Update the Information Box with relevant information & move it to correct pos
+      
+      // Get indices of links in documents
+      docs = x.documents;
+      const matches = docs.Toponyms.reduce((a, e, i) => {
+        splits = e.split(/[:,]+/);
+        splits = splits.map(s => s.trim());
+        if (splits.includes(target_name) && splits.includes(source_name))
+            a.push(i);
+        return a;
+        }, []);
+
+      // Update the Information Box to correct pos
       info_layer.attr("width", info_w).attr("height", info_h).attr("x", (d3.select("svg").node().clientWidth/1)-info_w);
       infobox.style("width", info_w + "px").style("height", info_h + "px");
       
-      infobox.html(info_panel_select[0] + source_name + link_tooltip_html[1] + target_name + info_panel_select[1]);
+      // Update info box html
+      info_html = info_panel_select[0] + source_name + link_tooltip_html[1] + target_name + info_panel_select[1] + matches.length + info_panel_select[2] + info_panel_select[3];
+      matches.forEach((m) => info_html += node_tooltip_html[4] + eo + docs.Textstelle[m] + ec + eo + docs.CTH[m] + ec + eo + docs.Fundort[m] + ec + eo + docs.Dat[m] + ec + eo + docs.RefNr[m] + ec + node_tooltip_html[7]);
+      info_html = info_html + info_panel_select[4];
+      infobox.html(info_html);
       
       // Finish with adding button/window transformation
       addQuit();

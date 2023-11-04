@@ -14,6 +14,7 @@ ecs <- entry_counts
 ecs$Type <- gsub(".+:", "", ecs$Toponym)
 ecs$Type <- mapvalues(ecs$Type, c("cho", "hyd", "oro", "oik"), c("Choronym", "Hydronym", "Oronym", "Oikonym"))
 ecs$Toponym <- stri_unescape_unicode(gsub("<U\\+(....)>", "\\\\u\\1", ecs$Toponym))
+documents <- read_csv("./shiny_data/doc.csv")
 
 # Function for assigning relationships' Toponym ids instead of strings
 update_func <- function(x){
@@ -48,7 +49,7 @@ if(local){
                     fontSize = 20, fontFamily = "serif", linkColour = "#666", opacity=1.0, opacityNoHover = TRUE, legend=T
   )
   n$x$options <- c(n$x$options, TableRows=def_table_rows)
-  n$x$options$Documents = documents
+  n$x$documents = documents
   n <- htmlwidgets::onRender(n, jsCode = tooltip)
   # And Display! (local only)
   n

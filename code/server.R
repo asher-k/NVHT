@@ -9,6 +9,7 @@ library(gsubfn)
 source("widget.R", local = TRUE)
 ecs <- read_csv("./shiny_data/ecs.csv")
 rcs <- read_csv("./shiny_data/rcs.csv")
+documents <- read_csv("./shiny_data/doc.csv")
 ColourScale <- 'd3.scaleOrdinal().domain(["Choronym", "Hydronym", "Oronym", "Oikonym"]).range(["#f2428f", "#41a7e2", "#9e7955", "#bcb6d9"]);'
 def_table_rows <- 5
 
@@ -84,7 +85,7 @@ server <- function(input, output, session) {
       
       # Linkages to tooltip & info panel
       n$x$options$TableRows = trs
-      n$x$options$Documents = docs
+      n$x$documents = documents
       n <- htmlwidgets::onRender(n, tooltip)
     })
     
