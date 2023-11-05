@@ -1,6 +1,8 @@
 library(plyr)
 library(dplyr)
 library(readr)
+library(purrr)
+library(stringr)
 
 # Define data location
 in_path <- "../toponym_data/"
@@ -41,11 +43,6 @@ for(doc in unique(toponyms$Textstelle)){
 }
 colnames(relations) <- c("To", "From", "Document")
 
-# Compute counts of Toponyms
-entry_counts <- table(toponyms$Toponym)
-entry_counts <- as.data.frame(entry_counts)
-colnames(entry_counts) <- c("Toponym", "Freq")
-
 # Compute counts of relations
 relation_counts <- relations
 relation_counts <- group_by(relation_counts, To, From) %>% 
@@ -53,7 +50,15 @@ relation_counts <- group_by(relation_counts, To, From) %>%
 
 # Restructure toponym data for displaying document information
 mergedoc <- function(x){
-  return(paste(x, collapse=', ' ))
+  x <- unique(x)
+  x <- paste(x, collapse=', ')
+  return(x)
 }
 documents <- toponyms[,-c(1:3, 10)]
 documents <- documents %>% group_by(Textstelle, CTH, Fundort, Dat, RefNr) %>% summarise(Toponyms = mergedoc(Toponym))
+
+# Compute counts of Toponyms
+mapped_counts = map(documents$Toponyms, function(t) unlist(str_split(t, ", ")))
+mapped_counts = t(as.data.frame(flatten(mapped_counts)))
+entry_counts = as.data.frame(table(mapped_counts))
+colnames(entry_counts) <- c("Toponym", "Freq")

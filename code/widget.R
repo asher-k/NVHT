@@ -36,12 +36,14 @@ tooltip <- 'function(el, x) {
     // Info panel for Nodes (can switch between 2 tabs)
     info_panel_node = ["<center> <p margin-bottom:1px;> <span style=\'font-size: 24px;\'>",
                        "</span> </p> </center> <hr style=\'border-color: #D3D3D3\'>", 
-                       "<center><div class=row row-content> <div class=col-12 id=tabs> <ul class=nav nav-tabs> <li class=nav-items> <a class=nav-link role=tab data-toggle=tab href=#tab1>Co-occurrences</a> </li> <li class=nav-items><a class=nav-link role=tab data-toggle=tab href=#tab2>Isolated Occurrences</a> </li> </ul> </div> </div>",
+                       "<center><div class=row row-content> <div class=col-12 id=tabs> <ul class=nav nav-tabs> <li class=nav-items> <a class=nav-link role=tab data-toggle=tab href=#tab1 onclick=\'" + `
+                       document.getElementById("tab1").style.display = "block"; document.getElementById("tab2").style.display = "none";\'` + ">Co-occurrences</a> </li> <li class=nav-items><a class=nav-link role=tab data-toggle=tab href=#tab2 onclick=\'" + `
+                       document.getElementById("tab1").style.display = "none"; document.getElementById("tab2").style.display = "block";\'` + ">Isolated Occurrences</a> </li> </ul> </div> </div>",
                        "<div class=panel panel-default style=\'height: 413px; width: 350px; border-radius: 4px;\'> <div class=tab-content>",
                        "</div> </div> </center>"];
                        
-    nodeLinkPanel = ["<div role=tabpanel class=tab-pane fade id=tab1>", "</div>"]
-    nodeIsoPanel = ["<div role=tabpanel class=tab-pane fade id=tab2>", "</div>"]
+    nodeLinkPanel = ["<div role=tabpanel class=tab-pane fade id=tab1 style=\'display:block\'>", "</div>"]
+    nodeIsoPanel = ["<div role=tabpanel class=tab-pane fade id=tab2 style=\'display:none\'>", "</div>"]
     
     // Setup Hover Tooltip & Info panel styling
     d3.select("body").append("div").attr("id", "tooltip")
@@ -213,22 +215,24 @@ tooltip <- 'function(el, x) {
       // Get isolated documents and build table with them
       docs = x.documents;
       var matches = docs.Toponyms.reduce((a, e, i) => {
-        splits = e.split(/[:,]+/);
+        splits = e.split(/:[a-zA-Z]{3}[,]?/);
         splits = splits.map(s => s.trim());
-        if (splits.includes(clicked_name) && splits.length === 2)
-            a.push(i);
-          return a;
+        splits = splits.filter((s) => s != "");
+        if (splits.includes(clicked_name) && (splits.length === 1 || splits.filter((s) => s != clicked_name).length === 0))
+          a.push(i);
+        return a;
         }, []);
-      isolates = "<div class=panel-heading style=\'height: 40px;\'>" + matches.length +  " isolated occurrences</div>";
+      isolates = "<div class=panel-heading style=\'height: 40px;\'>Occurs as an isolate in " + matches.length +  " documents</div>";
       isolates += "<div style=\'height: 361px; width: 348px; overflow-y: scroll;\'><table class=table table-responsive table-hover><thead><tr><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>";
       matches.forEach((m) => isolates += node_tooltip_html[4] + eo + docs.Textstelle[m] + ec + eo + docs.CTH[m] + ec + eo + docs.Fundort[m] + ec + eo + docs.Dat[m] + ec + eo + docs.RefNr[m] + ec + node_tooltip_html[7]);
       isolates += "</tbody></table></div>";
       
       // Obtain shared document names & counts
       matches = docs.Toponyms.reduce((a, e, i) => {
-        splits = e.split(/[:,]+/);
+        splits = e.split(/:[a-zA-Z]{3}[,]?/);
         splits = splits.map(s => s.trim()); 
-        if (splits.includes(clicked_name) && !(splits.length === 2))
+        splits = splits.filter((s) => s != "");
+        if(splits.includes(clicked_name) && splits.filter((s) => s != clicked_name).length != 0)
             a.push(i);
           return a;
         }, []);
@@ -243,15 +247,18 @@ tooltip <- 'function(el, x) {
       
       
       // Construct inner & outer tables of shared documents
+      function tableIDFix(t){
+        return t.split(/[:]+/).join("").replace("[", "_").replace("]", "_");
+      }
       function innerTable(toponym){
-        inner = [`<tr class="collapse table_${toponym.split(/[:]+/).join("")}"><td colspan="999"><div><table class="table table-striped"><thead><tr><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>`, `</tbody></table></div></td></tr>`];
+        inner = [`<tr class="collapse table_${tableIDFix(toponym)}"><td colspan="999"><div><table class="table table-striped"><thead><tr><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>`, `</tbody></table></div></td></tr>`];
         tab = inner[0];
         matches.filter((t) => docs.Toponyms[t].includes(toponym)).forEach((d) => tab += "<tr>" + `${eo}${docs.Textstelle[d]}${ec}${eo}${docs.CTH[d]}${ec}${eo}${docs.Fundort[d]}${ec}${eo}${docs.Dat[d]}${ec}${eo}${docs.RefNr[d]}${ec}` + "</tr>");
         return tab + inner[1];
       }
-      connections = "<div class=col-sm-12><div class=panel-heading style=\'height: 40px;\'>" + unique_links.length +  " toponym connections</div>";
+      connections = "<div class=col-sm-12><div class=panel-heading style=\'height: 40px;\'> Co-occurs with " + unique_links.length +  " unqiue toponyms in " + matches.length + " documents</div>";
       connections += "<div style=\'height: 361px; width: 348px; overflow-y: scroll;\'><table class=table table-responsive table-hover><thead><tr><th>Toponym</th><th># connecting docs</th><th></th></tr></thead><tbody>";
-      Object.keys(ctcts).sort().forEach((m) => connections += `<tr data-toggle=collapse id=table_${m.split(/[:]+/).join("")} data-target=.table_${m.split(/[:]+/).join("")}>` + eo + m.split(/[:]+/)[0] + ec + eo + ctcts[m] + ec + eo + "<button class=btn btn-default btn-sm>Expand</button>" + ec + "</tr>" + innerTable(m)); 
+      Object.keys(ctcts).sort().forEach((m) => connections += `<tr data-toggle=collapse id=table_${tableIDFix(m)} data-target=.table_${tableIDFix(m)}>` + eo + m.split(/[:]+/)[0] + ec + eo + ctcts[m] + ec + eo + "<button class=btn btn-default btn-sm>Expand</button>" + ec + "</tr>" + innerTable(m)); 
       connections += "</tbody></table></div></div>"; 
 
       // Update info box HTML content with all tables
@@ -267,6 +274,7 @@ tooltip <- 'function(el, x) {
       // Finish with adding button/window transformation
       addQuit();
       trnsfinf();
+      document.getElementById("tab1").click();
     });
     
     // On Link Click

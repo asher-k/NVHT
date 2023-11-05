@@ -6,7 +6,7 @@ library(plyr)
 library(gsubfn)
 
 # run locally? export dir?
-local <- TRUE
+local <- FALSE
 out_dir <- "./shiny_data/"
 
 # First reformat Toponym counts
@@ -14,7 +14,9 @@ ecs <- entry_counts
 ecs$Type <- gsub(".+:", "", ecs$Toponym)
 ecs$Type <- mapvalues(ecs$Type, c("cho", "hyd", "oro", "oik"), c("Choronym", "Hydronym", "Oronym", "Oikonym"))
 ecs$Toponym <- stri_unescape_unicode(gsub("<U\\+(....)>", "\\\\u\\1", ecs$Toponym))
-documents <- read_csv("./shiny_data/doc.csv")
+if(local){
+  documents <- read_csv("./shiny_data/doc.csv")
+}
 
 # Function for assigning relationships' Toponym ids instead of strings
 update_func <- function(x){
