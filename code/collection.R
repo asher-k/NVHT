@@ -9,7 +9,7 @@ cat_string <- c("oronym", "hydronym", "choronym", "oikonym")
 assertthat::are_equal(length(categories), length(cat_string))
 
 # Begin reading the toponyms (for all categories, replace below with 1:4)
-for(c in 4:4){
+for(c in 1:4){
   # Read category page and format the list of entries 
   page <- read_html(paste(ht, categories[c], sep = ""))
   tpl <- page %>% html_nodes("ol") %>%  map(~html_nodes(.x, 'li') %>% html_nodes("a") %>% html_attr("href"))
@@ -37,7 +37,7 @@ for(c in 4:4){
     colnames(entry) <- gsub("[X.U.2195..]|\\.*", "", colnames(entry))
     
     # Combine the document with all accumulated entries
-    if(is.na(entries)){
+    if(length(entries) < 1 && is.na(entries)){
       entries <- entry
     }
     else{
