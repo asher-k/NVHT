@@ -7,6 +7,7 @@ library(networkD3)
 # Load any necessary code
 source("widget.R", local = TRUE)
 
+link_icon = 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/OOjs_UI_icon_link-ltr-invert_slanted.svg/640px-OOjs_UI_icon_link-ltr-invert_slanted.svg.png'
 # Define the UI used in the app
 ui <- dashboardPage(
   dashboardHeader(title="Co-occurrences of Toponyms in Hittite Texts", titleWidth = 450), 
@@ -43,9 +44,10 @@ ui <- dashboardPage(
           style = "padding:10px; text-align: justify;"
       ),
       hr(),
-      div(HTML("Data sourced from HiTop<a href='https://www.hethport.uni-wuerzburg.de/HiTop/hetgeointro.php'><img style= 'display:inline-block; height:12px; width:12px;' src='https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/OOjs_UI_icon_link-ltr-invert_slanted.svg/640px-OOjs_UI_icon_link-ltr-invert_slanted.svg.png'></a>. 
-               All data rights and credit to the owners and maintainers of the platform. 
-               <br>Dashboard by Asher Stout<a href='https://github.com/asher-k'><img style= 'display:inline-block; height:12px; width:12px;' src='https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/OOjs_UI_icon_link-ltr-invert_slanted.svg/640px-OOjs_UI_icon_link-ltr-invert_slanted.svg.png'></a>"), style = "padding:10px")
+      div(HTML(sprintf("Data sourced from HiTop<a href='https://www.hethport.uni-wuerzburg.de/HiTop/hetgeointro.php'><img style= 'display:inline-block; height:16px; width:16px;' src=\"%s\"></a>.<br>
+                        All data rights and credit to the owners and maintainers of the platform.<br>
+                        <br>Dashboard by Asher Stout<a href='https://github.com/asher-k'><img style= 'display:inline-block; height:16px; width:16px;' src=\"%s\"'></a>
+                        <br>Source code available on GitHub<a href='https://github.com/asher-k/NVHT'><img style= 'display:inline-block; height:16px; width:16px;' src=\"%s\"'></a>", link_icon, link_icon, link_icon )), style = "padding:10px")
   ),
   body <- dashboardBody(useShinyjs(),
                         extendShinyjs(text = js_search, functions = c("searchNode")),

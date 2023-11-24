@@ -291,7 +291,7 @@ tooltip <- 'function(el, x) {
       infobox.append("div")
              .attr("class", "lead")
              .attr("title", "Close viewer (esc)")
-             .html("<button id=resetButton style=\' position:absolute; top:1px; left:0px; border: none; height:32px; width:32px;\'><img src=\'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/CloseWindow.svg/800px-CloseWindow.png\' style=\'width:28px\'></button>");
+             .html("<button id=resetButton style=\'padding: 0; border: 0; margin : 0; position:absolute; top:0px; left:1px; width:28px; height:28px; \'><img src=\'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/CloseWindow.svg/800px-CloseWindow.png\' style=\'width:28px; height:28px\'></button>");
       rb = document.getElementById("resetButton");
       rb.addEventListener("click", reset_infobox);
     }
@@ -299,7 +299,7 @@ tooltip <- 'function(el, x) {
       infobox.append("div")
              .attr("class", "lead")
              .attr("title", "Locate toponym (f)")
-             .html(`<button id=locateButton data-s=\'${s}\' style=\' position:absolute; top:1px; right:6px; border: none; height:32px; width:32px;\'><img src=\'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Vector_search_icon.svg/640px-Vector_search_icon.svg.png\' style=\'width:23px\'></button>`);
+             .html(`<button id=locateButton data-s=\'${s}\' style=\'padding: 0; border: 0; margin : 0; position:absolute; top:0px; right:1px; width:28px; height:28px;\'><img src=\'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Vector_search_icon.svg/640px-Vector_search_icon.svg.png\' style=\'width:24px; height:24px\'></button>`);
       lb = document.getElementById("locateButton");
       lb.addEventListener("click", zoom_selected);
     }
