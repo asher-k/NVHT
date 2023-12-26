@@ -8,7 +8,9 @@ tooltip <- 'function(el, x) {
     selected_ft = "";
     selected_colour = "";
     highlight = "#FF2800";
-    
+    win_height = window.innerHeight;
+    win_width = window.innerWidth;
+
     // Additional default settings
     d3.selectAll(".node text").style("stroke", "black");
     d3.selectAll(".node text").attr("stroke-width", "0");
@@ -33,7 +35,8 @@ tooltip <- 'function(el, x) {
                          "</span><br>", 
                          "</p></center>"];
     info_panel_select = ["<center><p margin-bottom:1px;><span style=\'font-size: 24px;\'>", 
-                         "</span></p><hr style=\'border-color: #D3D3D3\'><div class=panel panel-default style=\'height: 452px;\'><div class=panel-heading style=\'height: 40px;\'>", " Shared Documents</div><div style=\'height: 411px; overflow-y: scroll;\'>",
+                         `</span></p><hr style=\'border-color: #D3D3D3\'><div class=panel panel-default style=\'height: ${win_height*0.445}px;\'><div class=panel-heading style=\'height: ${win_height*0.04}px;\'>`, 
+                         ` Shared Documents</div><div style=\'height: ${win_height*0.35}px; overflow-y: scroll;\'>`,
                          "<table class=\'table table-striped\'><thead><tr style=\'position: sticky; top: 0px; background: #eee;\'><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>",
                          "</tbody></div></div></center>"];
     
@@ -45,7 +48,7 @@ tooltip <- 'function(el, x) {
                                </style><center> <p margin-bottom:1px;> <span style=\'font-size: 24px;\'>`,
                        "</span> <span style=\'font-size: 12px;\'>", "</span> </p> </center> <hr style=\'border-color: #D3D3D3\'>", 
                        "<center><div class=row row-content> <nav> <div class=col-12 id=tabs> <ul class=nav nav-tabs> <li> <a id=t1b class=\'nav-item active nav-link\' role=tab data-toggle=tab title=\'Co-occurences with other toponyms (c)\' href=#tab1 style=\'display: block;\'>Co-occurrences</a> </li> <li><a id=t2b class=\'nav-link nav-item\' role=tab data-toggle=tab title=\'Solo occurrences of this toponym (i)\' href=#tab2 style=\'display: block;\'" + ">Isolated Occurrences</a> </li> </ul> </div> </nav> </div>",
-                       "<div class=panel panel-default style=\'height: 413px; width: 350px; border-radius: 4px;\'> <div class=tab-content>",
+                       `<div class=panel panel-default style=\'height: ${win_height*0.325}px; width: ${win_width*0.24}px; border-radius: 4px;\'> <div class=tab-content>`,
                        "</div> </div> </center>"];
                        
     nodeLinkPanel = ["<div role=tabpanel class=tab-pane fade id=tab1 style=\'display:block\'>", "</div>"]
@@ -74,10 +77,10 @@ tooltip <- 'function(el, x) {
     // Define initial values of Information Box in the Top Right of screen
     d3.select("svg").append("g").attr("id", "info-layer");
     var info_layer = d3.select("#info-layer").append("foreignObject");
-    var info_w = 360, 
-        info_h = 540,
-        init_w = 180,
-        init_h = 40;
+    var info_w = win_width*0.25, 
+        info_h = win_height*0.45,
+        init_w = win_width*0.2,
+        init_h = win_height*0.04;
     info_layer.append("xhtml:div")
               .attr("id", "infobox")
               .style("position", "absolute")
@@ -94,7 +97,10 @@ tooltip <- 'function(el, x) {
     infobox.on("mousedown", function(){  // allows text selection and prevents background elements from being chosen in the info box
       d3.event.stopPropagation();
     });
-    infobox.on("wheel", function(d){  // allows text selection and prevents background elements from being chosen in the info box
+    infobox.on("wheel", function(d){  
+      d3.event.stopPropagation();
+    });
+    infobox.on("dblclick", function(d){  
       d3.event.stopPropagation();
     });
 
@@ -286,7 +292,7 @@ tooltip <- 'function(el, x) {
     
     
     
-    // Function for adding button(s) to info box
+    // Functions for adding buttons to info box
     function addQuit(){
       infobox.append("div")
              .attr("class", "lead")
@@ -332,8 +338,8 @@ tooltip <- 'function(el, x) {
           a.push(i);
         return a;
         }, []);
-      isolates = "<div class=panel-heading style=\'height: 40px;\'>Occurs as an isolate in " + matches.length +  " documents</div>";
-      isolates += "<div style=\'height: 361px; width: 348px; overflow-y: scroll; overflow-x: hidden;\'><table class=\'table table-striped\' style=\' table-layout: fixed; width: 100%;\'><thead><tr style=\'position: sticky; top: 0px; background: #eee;\'><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>";
+      isolates = `<div class=panel-heading style=\'height: ${win_height*0.04}px;\'>Occurs as an isolate in ` + matches.length +  " documents</div>";
+      isolates += `<div style=\'height: ${win_height*0.285}px; width: ${win_width*0.239}px; overflow-y: scroll; overflow-x: hidden;\'><table class=\'table table-striped\' style=\' table-layout: fixed;\'><thead><tr style=\'position: sticky; top: 0px; background: #eee;\'><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>`;
       matches.forEach((m) => isolates += node_tooltip_html[4] + eo + docs.Textstelle[m] + ec + eo + docs.CTH[m] + ec + eo + docs.Fundort[m] + ec + eo + docs.Dat[m] + ec + eo + docs.RefNr[m] + ec + node_tooltip_html[7]);
       isolates += "</tbody></table></div>";
       
@@ -377,8 +383,8 @@ tooltip <- 'function(el, x) {
         matches.filter((t) => docs.Toponyms[t].includes(toponym)).forEach((d) => tab += "<tr>" + `${eo}${docs.Textstelle[d]}${ec}${eo}${docs.CTH[d]}${ec}${eo}${docs.Fundort[d]}${ec}${eo}${docs.Dat[d]}${ec}${eo}${docs.RefNr[d]}${ec}` + "</tr>");
         return tab + inner[1];
       }
-      connections = "<div class=col-sm-12><div class=panel-heading style=\'height: 40px;\'> Co-occurs with " + unique_links.length +  " unqiue toponyms in " + matches.length + " documents</div>";
-      connections += "<div style=\'height: 361px; width: 348px; overflow-y: scroll; overflow-x: hidden;\'><table class=table table-responsive table-hover style=\'width: 100%;\'><thead><tr style=\'position: sticky; top: 0px; background: #eee;\'><th>Toponym</th><th>Co-occurrences</th><th></th></tr></thead><tbody>";
+      connections = "<div class=col-sm-12><div class=panel-heading style=\'${win_height*0.04}px;\'> Co-occurs with " + unique_links.length +  " unqiue toponyms in " + matches.length + " documents</div>";
+      connections += "<div style=\'height: ${win_height*0.285}px; width: ${win_width*0.239}px; overflow-y: scroll; overflow-x: hidden;\'><table class=table table-responsive table-hover style=\'width: 100%;\'><thead><tr style=\'position: sticky; top: 0px; background: #eee;\'><th>Toponym</th><th>Co-occurrences</th><th></th></tr></thead><tbody>";
       Object.keys(ctcts).sort().forEach((m) => { 
         connections += `<tr data-toggle=collapse id=table_${tableIDFix(m)} data-target=.table_${tableIDFix(m)}>` + eo + m.split(/[:]+/)[0] + ec + eo + ctcts[m] + ec + eo + `<button id=${buttonIDFix(m)}_btn class=btn btn-default btn-sm onClick="uit(this.id)">Expand</button>` + ec + "</tr>" + innerTable(m);
       }); 
@@ -400,7 +406,6 @@ tooltip <- 'function(el, x) {
       // Finish with adding button/window transformation
       d3.select("#t1b").on("click", select_cooccurs);
       d3.select("#t2b").on("click", select_isolates);
-      console.log(clicked_name);
       addQuit();
       addLoc(clicked_name);
       trnsfinf();
