@@ -10,6 +10,8 @@ tooltip <- 'function(el, x) {
     highlight = "#FF2800";
     win_height = window.innerHeight;
     win_width = window.innerWidth;
+    panel_height = Math.max(win_height*0.445, 600);
+    panel_width = Math.max(win_width*0.35, 400);
 
     // Additional default settings
     d3.selectAll(".node text").style("stroke", "black");
@@ -35,8 +37,8 @@ tooltip <- 'function(el, x) {
                          "</span><br>", 
                          "</p></center>"];
     info_panel_select = ["<center><p margin-bottom:1px;><span style=\'font-size: 24px;\'>", 
-                         `</span></p><hr style=\'border-color: #D3D3D3\'><div class=panel panel-default style=\'height: ${win_height*0.445}px;\'><div class=panel-heading style=\'height: ${win_height*0.04}px;\'>`, 
-                         ` Shared Documents</div><div style=\'height: ${win_height*0.35}px; overflow-y: scroll;\'>`,
+                         `</span></p><hr style=\'border-color: #D3D3D3\'><div class=panel panel-default style=\'height: ${panel_height*0.8525}px;\'><div class=panel-heading style=\'height: ${panel_height*0.1}px;\'>`, 
+                         ` Shared Documents</div><div style=\'height: ${panel_height*0.75}px; overflow-y: scroll;\'>`,
                          "<table class=\'table table-striped\'><thead><tr style=\'position: sticky; top: 0px; background: #eee;\'><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>",
                          "</tbody></div></div></center>"];
     
@@ -44,11 +46,11 @@ tooltip <- 'function(el, x) {
     info_panel_node = [`<style>nav > div li a.nav-item.nav-link:hover, 
                                nav > div li a.nav-item.nav-link:focus,
                                nav > div li a.nav-item.nav-link.active
-                               { border: none; background: #E0E0E0; color:#000; border-radius:5; }
-                               </style><center> <p margin-bottom:1px;> <span style=\'font-size: 24px;\'>`,
-                       "</span> <span style=\'font-size: 12px;\'>", "</span> </p> </center> <hr style=\'border-color: #D3D3D3\'>", 
-                       "<center><div class=row row-content> <nav> <div class=col-12 id=tabs> <ul class=nav nav-tabs> <li> <a id=t1b class=\'nav-item active nav-link\' role=tab data-toggle=tab title=\'Co-occurences with other toponyms (c)\' href=#tab1 style=\'display: block;\'>Co-occurrences</a> </li> <li><a id=t2b class=\'nav-link nav-item\' role=tab data-toggle=tab title=\'Solo occurrences of this toponym (i)\' href=#tab2 style=\'display: block;\'" + ">Isolated Occurrences</a> </li> </ul> </div> </nav> </div>",
-                       `<div class=panel panel-default style=\'height: ${win_height*0.325}px; width: ${win_width*0.24}px; border-radius: 4px;\'> <div class=tab-content>`,
+                               { border: none; background: #E0E0E0; color:#000; border-radius: 7px; }
+                        </style><center> <p margin-bottom:1px;> <span style=\'font-size: 24px;\'>`,
+                       "</span> <span style=\'font-size: 12px;\'>", "</span> </p><hr style=\'border-color: #D3D3D3\'> </center>", 
+                       `<center><div class=row row-content> <nav> <div class=col-12 id=tabs> <ul class=nav nav-tabs> <li> <a id=t1b class=\'nav-item active nav-link\' role=tab data-toggle=tab title=\'Co-occurences with other toponyms (c)\' href=#tab1 style=\'display: block;\'>Co-occurrences</a> </li> <li><a id=t2b class=\'nav-link nav-item\' role=tab data-toggle=tab title=\'Solo occurrences of this toponym (i)\' href=#tab2 style=\'display: block;\'` + ">Isolated Occurrences</a> </li> </ul> </div> </nav> </div>",
+                       `<div class=panel panel-default style=\'height: ${panel_height*0.785}px; width: ${panel_width*0.98}px; border-radius: 7px;\'> <div class=tab-content>`,
                        "</div> </div> </center>"];
                        
     nodeLinkPanel = ["<div role=tabpanel class=tab-pane fade id=tab1 style=\'display:block\'>", "</div>"]
@@ -65,6 +67,7 @@ tooltip <- 'function(el, x) {
                                    .style("border-radius", "5px")
                                    .style("padding", "5px")
                                    .style("margin", "0px");
+    d3.selectAll(".node text").attr("pointer-events", "none");
     
     
                                    
@@ -77,9 +80,7 @@ tooltip <- 'function(el, x) {
     // Define initial values of Information Box in the Top Right of screen
     d3.select("svg").append("g").attr("id", "info-layer");
     var info_layer = d3.select("#info-layer").append("foreignObject");
-    var info_w = win_width*0.25, 
-        info_h = win_height*0.45,
-        init_w = win_width*0.2,
+    var init_w = win_width*0.2,
         init_h = win_height*0.04;
     info_layer.append("xhtml:div")
               .attr("id", "infobox")
@@ -193,8 +194,7 @@ tooltip <- 'function(el, x) {
       clearTimeout(timeOutFunctionId); 
       timeOutFunctionId = setTimeout(trnsfinf, 1); 
     });
-    
-    
+
     
     // Moving ONTO Node 
     d3.selectAll(".node").on("mouseenter", function(e, d){
@@ -268,6 +268,7 @@ tooltip <- 'function(el, x) {
     
     // Moving ONTO Link 
     d3.selectAll(".link").on("mouseenter", function(e, d){
+      d3.selectAll(".node").filter(function (k, i) { return i === 1;}).dispatch("mouseleave");
       d3.select(this).style("opacity", link_opacity_select);
       
       // Show tooltip & update text
@@ -338,8 +339,8 @@ tooltip <- 'function(el, x) {
           a.push(i);
         return a;
         }, []);
-      isolates = `<div class=panel-heading style=\'height: ${win_height*0.04}px;\'>Occurs as an isolate in ` + matches.length +  " documents</div>";
-      isolates += `<div style=\'height: ${win_height*0.285}px; width: ${win_width*0.239}px; overflow-y: scroll; overflow-x: hidden;\'><table class=\'table table-striped\' style=\' table-layout: fixed;\'><thead><tr style=\'position: sticky; top: 0px; background: #eee;\'><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>`;
+      isolates = `<div class=panel-heading style=\'height: ${panel_height*0.1}px;\'>Occurs as an isolate in ` + matches.length +  " documents</div>";
+      isolates += `<div style=\'height: ${panel_height*0.665}px; width: ${panel_width*0.97}px; overflow-y: scroll; overflow-x: hidden;\'><table class=\'table table-striped\' style=\' table-layout: fixed;\'><thead><tr style=\'position: sticky; top: 0px; background: #eee;\'><th>Document</th><th>CTH</th><th>Found</th><th>Date</th><th>Ref. #</th></tr></thead><tbody>`;
       matches.forEach((m) => isolates += node_tooltip_html[4] + eo + docs.Textstelle[m] + ec + eo + docs.CTH[m] + ec + eo + docs.Fundort[m] + ec + eo + docs.Dat[m] + ec + eo + docs.RefNr[m] + ec + node_tooltip_html[7]);
       isolates += "</tbody></table></div>";
       
@@ -383,12 +384,12 @@ tooltip <- 'function(el, x) {
         matches.filter((t) => docs.Toponyms[t].includes(toponym)).forEach((d) => tab += "<tr>" + `${eo}${docs.Textstelle[d]}${ec}${eo}${docs.CTH[d]}${ec}${eo}${docs.Fundort[d]}${ec}${eo}${docs.Dat[d]}${ec}${eo}${docs.RefNr[d]}${ec}` + "</tr>");
         return tab + inner[1];
       }
-      connections = "<div class=col-sm-12><div class=panel-heading style=\'${win_height*0.04}px;\'> Co-occurs with " + unique_links.length +  " unqiue toponyms in " + matches.length + " documents</div>";
-      connections += "<div style=\'height: ${win_height*0.285}px; width: ${win_width*0.239}px; overflow-y: scroll; overflow-x: hidden;\'><table class=table table-responsive table-hover style=\'width: 100%;\'><thead><tr style=\'position: sticky; top: 0px; background: #eee;\'><th>Toponym</th><th>Co-occurrences</th><th></th></tr></thead><tbody>";
+      connections = `<div class=panel-heading style=\'height: ${panel_height*0.1}px;\'>Co-occurs with ` + unique_links.length +  " unqiue toponyms in " + matches.length + " documents</div>";
+      connections += `<div style=\'height: ${panel_height*0.665}px; width: ${panel_width*0.97}px; overflow-y: scroll; overflow-x: hidden;\'><table class=table table-responsive table-hover><thead><tr style=\'position: sticky; top: 0px; background: #eee;\'><th>Toponym</th><th>Co-occurrences</th><th></th></tr></thead><tbody>`;
       Object.keys(ctcts).sort().forEach((m) => { 
         connections += `<tr data-toggle=collapse id=table_${tableIDFix(m)} data-target=.table_${tableIDFix(m)}>` + eo + m.split(/[:]+/)[0] + ec + eo + ctcts[m] + ec + eo + `<button id=${buttonIDFix(m)}_btn class=btn btn-default btn-sm onClick="uit(this.id)">Expand</button>` + ec + "</tr>" + innerTable(m);
       }); 
-      connections += "</tbody></table></div></div>"; 
+      connections += "</tbody></table></div>"; 
 
       // Update info box HTML content with all tables
       info_html = info_panel_node[0] + clicked_name + info_panel_node[1] + x.nodes.group[d] + info_panel_node[2] + info_panel_node[3] + info_panel_node[4] + nodeLinkPanel[0] + connections + nodeLinkPanel[1] + nodeIsoPanel[0] + isolates + nodeIsoPanel[1] + info_panel_node[5];
@@ -398,8 +399,8 @@ tooltip <- 'function(el, x) {
       }); 
       
       // Info Box HTML stylings & position
-      info_layer.attr("width", info_w).attr("height", info_h).attr("x", (d3.select("svg").node().clientWidth/1)-info_w);
-      infobox.style("width", info_w + "px").style("height", info_h + "px");
+      info_layer.attr("width", panel_width).attr("height", panel_height).attr("x", (d3.select("svg").node().clientWidth/1)-panel_width);
+      infobox.style("width", panel_width + "px").style("height", panel_height + "px");
       infobox.selectAll(".tab-content").style("padding", "10px").style("display", "flex").style("justify-content", "center");
       infobox.selectAll("li").style("width", "46%").style("text-align", "center").style("display", "inline-block");
       
@@ -438,8 +439,8 @@ tooltip <- 'function(el, x) {
       }, []);
 
       // Update the Information Box to correct pos
-      info_layer.attr("width", info_w).attr("height", info_h).attr("x", (d3.select("svg").node().clientWidth/1)-info_w);
-      infobox.style("width", info_w + "px").style("height", info_h + "px");
+      info_layer.attr("width", panel_width).attr("height", panel_height).attr("x", (d3.select("svg").node().clientWidth/1)-panel_width);
+      infobox.style("width", panel_width + "px").style("height", panel_height + "px");
       
       // Update info box html
       info_html = info_panel_select[0] + source_name + link_tooltip_html[1] + target_name + info_panel_select[1] + matches.length + info_panel_select[2] + info_panel_select[3];
